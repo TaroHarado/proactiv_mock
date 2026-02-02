@@ -2,37 +2,32 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const notifications = [
-  {
-    id: "n1",
-    title: "Новый заказ",
-    text: "Появился новый заказ без исполнителя.",
-    time: "5 мин назад",
-  },
-  {
-    id: "n2",
-    title: "Задача зависла по SLA",
-    text: "Проверка отчёта по Hyundai Porter просрочена.",
-    time: "30 мин назад",
-  },
-  {
-    id: "n3",
-    title: "Платёж от заказчика",
-    text: "Поступила оплата по KamAZ 5490.",
-    time: "1 ч назад",
-  },
+import { executorNotificationsMock } from "@/data/mock";
+
+const customerNotifications = [
+  { id: "n1", title: "Новый заказ", text: "Появился новый заказ без исполнителя.", time: "5 мин назад" },
+  { id: "n2", title: "Задача зависла по SLA", text: "Проверка отчёта по Hyundai Porter просрочена.", time: "30 мин назад" },
+  { id: "n3", title: "Платёж от заказчика", text: "Поступила оплата по KamAZ 5490.", time: "1 ч назад" },
 ];
 
 export function Topbar() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const isExecutor = pathname.startsWith("/executor");
+  const notifications = isExecutor ? executorNotificationsMock : customerNotifications;
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#e2e8f0] bg-white px-4 sm:px-6">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4">
         <div className="flex items-center gap-4 sm:gap-8">
-          <Link href="/manager" className="flex items-center gap-2">
+          <Link
+            href={isExecutor ? "/executor" : "/manager"}
+            className="flex items-center gap-2"
+          >
             <img
               src="/logo.png"
               alt="ПроАктив"
@@ -40,12 +35,38 @@ export function Topbar() {
             />
           </Link>
           <Link
-            href="#"
+            href={isExecutor ? "/executor/support" : "#"}
             className="hidden sm:inline text-sm text-[#64748b] hover:text-[#2563eb] transition-colors"
           >
             Поддержка
           </Link>
         </div>
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Переключатель роли: Заказчик ⇄ Исполнитель */}
+          <div className="flex rounded-xl border border-[#e2e8f0] bg-[#f8f9fb] p-0.5">
+            <Link
+              href="/manager"
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:px-4 sm:text-sm",
+                !isExecutor
+                  ? "bg-white text-[#2563eb] shadow-sm"
+                  : "text-[#64748b] hover:text-[#0f172a]"
+              )}
+            >
+              Заказчик
+            </Link>
+            <Link
+              href="/executor"
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:px-4 sm:text-sm",
+                isExecutor
+                  ? "bg-white text-[#2563eb] shadow-sm"
+                  : "text-[#64748b] hover:text-[#0f172a]"
+              )}
+            >
+              Исполнитель
+            </Link>
+          </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="relative">
             <button
@@ -108,6 +129,7 @@ export function Topbar() {
               </p>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </header>
