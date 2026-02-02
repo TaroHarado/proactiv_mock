@@ -7,6 +7,9 @@ import { executorActiveOrdersMock } from "@/data/mock";
 import Link from "next/link";
 import { ChevronRight, MessageCircle } from "lucide-react";
 
+// Продажа под ключ — только у менеджера (публикация, прикрепление ссылок). У исполнителя таких заказов не показываем.
+const executorOrders = executorActiveOrdersMock.filter((o) => o.serviceType !== "sale");
+
 const statusVariant: Record<string, "default" | "secondary" | "warning" | "outline"> = {
   access_pending: "warning",
   in_progress: "default",
@@ -23,7 +26,7 @@ export default function ExecutorOrdersPage() {
       <Card>
         <CardContent className="p-0">
           <ul className="divide-y divide-[#e2e8f0]">
-            {executorActiveOrdersMock.map((o) => (
+            {executorOrders.map((o) => (
               <li
                 key={o.id}
                 className="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-[#f8f9fb] transition-colors"

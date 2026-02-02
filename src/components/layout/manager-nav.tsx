@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/manager", label: "Сводка", icon: LayoutDashboard },
-  { href: "/manager/task-inbox", label: "Очередь задач", icon: Inbox },
+  { href: "/manager/tasks", label: "Очередь задач", icon: Inbox },
   { href: "/manager/executors", label: "Исполнители", icon: Users },
   { href: "/manager/orders/new", label: "Заказы: Новые", icon: FileText },
   { href: "/manager/orders/in-progress", label: "Заказы: В работе", icon: Loader2 },

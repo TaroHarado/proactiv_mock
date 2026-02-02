@@ -10,6 +10,9 @@ import {
   getRatingCategoryLabel,
 } from "@/data/mock";
 
+// Продажа под ключ — только у менеджера. У исполнителя показываем только инспекцию, аудит, обслуживание.
+const executorOrders = executorActiveOrdersMock.filter((o) => o.serviceType !== "sale");
+
 export default function ExecutorDashboardPage() {
   const ratingDesc =
     "Рейтинг складывается из: Качество (оценка менеджера по сдаче отчётов), Скорость отклика (5: <90 мин, 4: 91–120, 3: 121–150, 2: 151–180, 1: >3 ч), Коэффициент выбора / % отказов. Top (4.5–5.0) видит новые заказы первые 90 минут эксклюзивно.";
@@ -103,7 +106,7 @@ export default function ExecutorDashboardPage() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
-            {executorActiveOrdersMock.slice(0, 3).map((o) => (
+            {executorOrders.slice(0, 3).map((o) => (
               <li
                 key={o.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#e2e8f0] bg-white p-4 hover:bg-[#f8f9fb] transition-colors"

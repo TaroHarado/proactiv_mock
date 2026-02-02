@@ -6,25 +6,54 @@ import { Badge } from "@/components/ui/badge";
 import {
   executorAccrualsMock,
   payoutRequestsMock,
+  executorMonthlyEarningsMock,
 } from "@/data/mock";
-import { Send, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import { Send } from "lucide-react";
 
 export default function ExecutorFinancePage() {
+  const data = executorMonthlyEarningsMock;
+  const lastIndex = data.length - 1;
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#0f172a]">Финансы</h1>
+      <h1 className="text-2xl font-bold text-[var(--black)]">Финансы</h1>
 
-      {/* Заглушка диаграммы */}
+      {/* Заработок по месяцам — реальный график */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Заработок по месяцам</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-48 rounded-xl bg-[#f8f9fb] flex items-center justify-center text-[#64748b] text-sm">
-            <span className="flex items-center gap-2">
-              <TrendingUp className="h-6 w-6" />
-              График (заглушка)
-            </span>
+          <div className="h-[240px] min-h-[240px] w-full">
+            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+              <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 4 }}>
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : String(v))}
+                />
+                <Tooltip
+                  formatter={(v: number | undefined) => [
+                    v != null ? `${v.toLocaleString("ru-RU")} ₽` : "",
+                    "Заработок",
+                  ]}
+                  contentStyle={{ borderRadius: 12 }}
+                />
+                <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={36}>
+                  {data.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={
+                        index === lastIndex
+                          ? "var(--blue-50)"
+                          : "var(--border)"
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
@@ -35,17 +64,17 @@ export default function ExecutorFinancePage() {
           <CardTitle className="text-lg">Начисления по заказам</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <ul className="divide-y divide-[#e2e8f0]">
+          <ul className="divide-y divide-[var(--border)]">
             {executorAccrualsMock.map((a) => (
               <li
                 key={a.id}
-                className="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-[#f8f9fb] transition-colors"
+                className="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-[var(--app-bg)] transition-colors"
               >
                 <div>
-                  <p className="font-medium text-[#0f172a]">{a.assetName}</p>
-                  <p className="text-sm text-[#64748b]">{a.completedAt}</p>
+                  <p className="font-medium text-[var(--black)]">{a.assetName}</p>
+                  <p className="text-sm text-[var(--gray-icon)]">{a.completedAt}</p>
                 </div>
-                <p className="font-semibold text-[#0f172a]">
+                <p className="font-semibold text-[var(--black)]">
                   {a.amount.toLocaleString("ru")} ₽
                 </p>
               </li>
@@ -68,15 +97,15 @@ export default function ExecutorFinancePage() {
             {payoutRequestsMock.map((pr) => (
               <li
                 key={pr.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#e2e8f0] bg-[#f8f9fb] p-4"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--app-bg)] p-4"
               >
                 <div>
-                  <p className="font-medium text-[#0f172a]">
+                  <p className="font-medium text-[var(--black)]">
                     {pr.amount.toLocaleString("ru")} ₽
                   </p>
-                  <p className="text-xs text-[#64748b]">{pr.createdAt}</p>
+                  <p className="text-xs text-[var(--gray-icon)]">{pr.createdAt}</p>
                   {pr.comment && (
-                    <p className="mt-1 text-sm text-[#64748b]">{pr.comment}</p>
+                    <p className="mt-1 text-sm text-[var(--gray-icon)]">{pr.comment}</p>
                   )}
                 </div>
                 <Badge
