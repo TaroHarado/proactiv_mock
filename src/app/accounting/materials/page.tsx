@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Package, Bell } from "lucide-react";
 
 const materialsMock = [
-  { id: "m1", orderId: "prep2", orderType: "Подготовка", companyName: "ИП Петров", amount: 45000, status: "invoice_pending" as const, responsible: "Менеджер Иванов" },
-  { id: "m2", orderId: "prep3", orderType: "Подготовка", companyName: "ООО Флот", amount: 120000, status: "paid" as const, responsible: "Менеджер Сидорова" },
+  { id: "m1", orderId: "prep2", orderType: "Обслуживание", companyName: "ИП Петров", amount: 45000, status: "invoice_pending" as const, responsible: "Менеджер Иванов" },
+  { id: "m2", orderId: "prep3", orderType: "Обслуживание", companyName: "ООО Флот", amount: 120000, status: "paid" as const, responsible: "Менеджер Сидорова" },
 ];
 
 const STATUS_LABELS: Record<string, string> = {

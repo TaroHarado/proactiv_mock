@@ -437,22 +437,65 @@ export type ExecutorOrderStatus =
   | "on_rework"
   | "completed";
 
-export type RatingCategory = "top" | "good" | "normal" | "low";
+export type RatingCategory = "elevated" | "standard" | "lowered";
+
+export type VerificationMethod = "esia" | "passport" | null;
+
+export type ContractorType = "npd" | "ip" | "ooo";
 
 export interface ExecutorUser {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   type: ExecutorType;
+  contractorType: ContractorType; // npd = самозанятый, ip | ooo = подрядчик
+  companyName?: string; // для ИП/ООО
+  inn?: string;
+  requisites?: string;
+  education?: string;
+  specialization?: string;
+  experienceYears?: number;
   rating: number;
   ratingCategory: RatingCategory;
   qualityScore: number;
-  responseSpeedScore: number; // 1–5 по правилу 90 мин
-  selectionCoeff: number; // % отказов
-  firstTimeAcceptRate: number; // % принятых с первого раза
+  responseSpeedScore: number; // Cср, 1–5 по правилу 90 мин
+  selectionCoeff: number; // B, коэффициент выбора / % отказов
+  firstTimeAcceptRate: number; // % принятых с первого раза (надежность)
+  acceptRate: number; // процент принятых заявок
+  complaintsPercent: number; // Рср, % рекламаций
+  reactionSpeed: number; // минуты до отклика
+  priorityOrdersShare: number; // Пср, доля приоритетных заказов (0–100)
   avgResponseMinutes: number;
   completedThisMonth: number;
   completedByType: { audit: number; inspection: number; maintenance: number; sale: number };
+  isVerified: boolean;
+  verificationMethod: VerificationMethod;
+}
+
+/** Начисление по заказу со статусом оплаты (для блока «Оплачено по заказам») */
+export interface ExecutorAccrualPaid {
+  id: string;
+  orderId: string;
+  assetName: string;
+  amount: number;
+  status: "processing" | "paid";
+  date: string;
+}
+
+/** Документ ЭДО (СБИС): акт, УПД и т.д. */
+export type EdoDocType = "act" | "upd";
+export type EdoDocStatus = "sent" | "awaiting_signature" | "signed";
+/** Доступные способы подписи: ПЭП (для НПД), КЭП СБИС */
+export type EdoSignMethod = "pep" | "kep";
+
+export interface ExecutorEdoDoc {
+  id: string;
+  type: EdoDocType;
+  status: EdoDocStatus;
+  signMethodsAvailable: EdoSignMethod[];
+  lastUpdate: string;
+  description?: string;
 }
 
 export interface BoardOrderCard {
@@ -468,7 +511,9 @@ export interface BoardOrderCard {
   minutesPending: number;
   rejectionsCount: number;
   requiresAccessAgreement: boolean;
-  exclusiveForTop: boolean; // первые 90 мин только для Top
+  exclusiveForTop: boolean; // повышенный приоритет доступа (ранний доступ к заявкам)
+  /** Повторный заказ для того же исполнителя — показывать бейдж "Ваш заказ" и сортировать выше */
+  isFollowUpForSameExecutor?: boolean;
 }
 
 export interface ExecutorActiveOrder {
@@ -490,6 +535,7 @@ export interface ExecutorCompletedOrder {
   assetName: string;
   firstTimeAccepted: boolean;
   amount: number;
+  reportUrl?: string;
 }
 
 export interface ExecutorAccrual {
@@ -520,16 +566,67 @@ export const executorUser: ExecutorUser = {
   id: "ex1",
   name: "Андрей Андреев",
   email: "andrey@example.com",
+  phone: "+7 999 123-45-67",
   type: "ip",
+  contractorType: "ip",
+  companyName: "ИП Андреев А.А.",
+  inn: "770712345678",
+  requisites: "Расчётный счёт: 40702810100000001234, банк ПАО Сбербанк, БИК 044525225",
   rating: 4.8,
-  ratingCategory: "top",
+  ratingCategory: "elevated",
   qualityScore: 4.9,
   responseSpeedScore: 5,
   selectionCoeff: 2,
   firstTimeAcceptRate: 92,
+  acceptRate: 94,
+  complaintsPercent: 1.2,
+  reactionSpeed: 45,
+  priorityOrdersShare: 35,
   avgResponseMinutes: 45,
   completedThisMonth: 8,
   completedByType: { audit: 2, inspection: 4, maintenance: 2, sale: 0 },
+  isVerified: true,
+  verificationMethod: "esia",
+};
+
+/** Оплачено по заказам (статусы В обработке / Оплачено) */
+export const executorAccrualsPaidMock: ExecutorAccrualPaid[] = [
+  { id: "ap1", orderId: "c1", assetName: "Hyundai Porter", amount: 12000, status: "paid", date: "2025-01-28" },
+  { id: "ap2", orderId: "c2", assetName: "Scania R-series", amount: 14000, status: "processing", date: "2025-01-20" },
+  { id: "ap3", orderId: "ord2", assetName: "KamAZ 5490", amount: 9000, status: "processing", date: "2025-02-01" },
+];
+
+/** Документы ЭДО (заглушка СБИС) */
+export const executorEdoDocsMock: ExecutorEdoDoc[] = [
+  {
+    id: "edo1",
+    type: "act",
+    status: "awaiting_signature",
+    signMethodsAvailable: ["kep"],
+    lastUpdate: "2025-02-01T12:00:00",
+    description: "Акт выполненных работ № 45",
+  },
+  {
+    id: "edo2",
+    type: "upd",
+    status: "sent",
+    signMethodsAvailable: ["pep", "kep"],
+    lastUpdate: "2025-01-28T10:00:00",
+    description: "УПД от 28.01.2025",
+  },
+];
+
+/** Профиль НПД для отображения второго варианта (можно переключить contractorType в моке на 'npd') */
+export const executorUserNpdExample: Partial<ExecutorUser> = {
+  contractorType: "npd",
+  name: "Иванова Мария Петровна",
+  inn: "770712345678",
+  education: "Высшее, автотехника",
+  specialization: "Технический осмотр ТС",
+  experienceYears: 5,
+  requisites: "НПД, самозанятый",
+  isVerified: false,
+  verificationMethod: null,
 };
 
 export const boardOrdersMock: BoardOrderCard[] = [
@@ -547,6 +644,7 @@ export const boardOrdersMock: BoardOrderCard[] = [
     rejectionsCount: 3,
     requiresAccessAgreement: true,
     exclusiveForTop: false,
+    isFollowUpForSameExecutor: true,
   },
   {
     id: "b2",
@@ -577,8 +675,104 @@ export const boardOrdersMock: BoardOrderCard[] = [
     rejectionsCount: 0,
     requiresAccessAgreement: false,
     exclusiveForTop: true,
+    isFollowUpForSameExecutor: true,
+  },
+  {
+    id: "b4",
+    serviceType: "inspection",
+    serviceLabel: "Проактивная инспекция",
+    address: "Казань, ул. Баумана, 58",
+    city: "Казань",
+    payoutPercent: 60,
+    orderAmount: 12000,
+    payoutAmount: 7200,
+    priority: "normal",
+    minutesPending: 280,
+    rejectionsCount: 1,
+    requiresAccessAgreement: true,
+    exclusiveForTop: false,
+  },
+  {
+    id: "b5",
+    serviceType: "audit",
+    serviceLabel: "Технико-финансовый аудит",
+    address: "Новосибирск, Красный пр., 77",
+    city: "Новосибирск",
+    payoutPercent: 70,
+    orderAmount: 22000,
+    payoutAmount: 15400,
+    priority: "high",
+    minutesPending: 65,
+    rejectionsCount: 0,
+    requiresAccessAgreement: true,
+    exclusiveForTop: true,
+  },
+  {
+    id: "b6",
+    serviceType: "maintenance",
+    serviceLabel: "Обслуживание и ремонт",
+    address: "Екатеринбург, ул. Малышева, 36",
+    city: "Екатеринбург",
+    payoutPercent: 60,
+    orderAmount: 18000,
+    payoutAmount: 10800,
+    priority: "normal",
+    minutesPending: 510,
+    rejectionsCount: 2,
+    requiresAccessAgreement: false,
+    exclusiveForTop: false,
+    isFollowUpForSameExecutor: true,
+  },
+  {
+    id: "b7",
+    serviceType: "inspection",
+    serviceLabel: "Проактивная инспекция",
+    address: "Нижний Новгород, ул. Рождественская, 6",
+    city: "Нижний Новгород",
+    payoutPercent: 60,
+    orderAmount: 14000,
+    payoutAmount: 8400,
+    priority: "normal",
+    minutesPending: 90,
+    rejectionsCount: 0,
+    requiresAccessAgreement: true,
+    exclusiveForTop: false,
+  },
+  {
+    id: "b8",
+    serviceType: "audit",
+    serviceLabel: "Технико-финансовый аудит",
+    address: "Самара, ул. Куйбышева, 100",
+    city: "Самара",
+    payoutPercent: 70,
+    orderAmount: 19000,
+    payoutAmount: 13300,
+    priority: "normal",
+    minutesPending: 200,
+    rejectionsCount: 0,
+    requiresAccessAgreement: true,
+    exclusiveForTop: true,
+  },
+  {
+    id: "b9",
+    serviceType: "maintenance",
+    serviceLabel: "Обслуживание и ремонт",
+    address: "Ростов-на-Дону, ул. Большая Садовая, 47",
+    city: "Ростов-на-Дону",
+    payoutPercent: 60,
+    orderAmount: 28000,
+    payoutAmount: 16800,
+    priority: "normal",
+    minutesPending: 30,
+    rejectionsCount: 0,
+    requiresAccessAgreement: false,
+    exclusiveForTop: false,
   },
 ];
+
+export function getBoardOrderById(id: string): BoardOrderCard | undefined {
+  return boardOrdersMock.find((o) => o.id === id);
+}
 
 export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
   // Аудит
@@ -705,6 +899,7 @@ export const executorCompletedOrdersMock: ExecutorCompletedOrder[] = [
     assetName: "Hyundai Porter",
     firstTimeAccepted: true,
     amount: 12000,
+    reportUrl: "#",
   },
   {
     id: "c2",
@@ -713,8 +908,13 @@ export const executorCompletedOrdersMock: ExecutorCompletedOrder[] = [
     assetName: "Scania R-series",
     firstTimeAccepted: false,
     amount: 14000,
+    reportUrl: "#",
   },
 ];
+
+export function getCompletedOrderById(id: string): ExecutorCompletedOrder | undefined {
+  return executorCompletedOrdersMock.find((o) => o.id === id);
+}
 
 export const executorAccrualsMock: ExecutorAccrual[] = [
   { id: "acc1", orderId: "c1", assetName: "Hyundai Porter", amount: 12000, completedAt: "2025-01-28" },
@@ -745,7 +945,7 @@ export const executorMonthlyEarningsMock: ExecutorMonthlyEarning[] = [
 ];
 
 export const executorNotificationsMock: ExecutorNotification[] = [
-  { id: "en1", title: "Новые заказы на доске", text: "Доступно 2 заказа в зоне эксклюзива (Top).", time: "10 мин назад", type: "new_order" },
+  { id: "en1", title: "Новые заказы на доске", text: "Доступно 2 заказа с повышенным приоритетом.", time: "10 мин назад", type: "new_order" },
   { id: "en2", title: "Доступ согласован", text: "По заказу KamAZ 5490 заказчик подтвердил доступ. Можно выезжать.", time: "1 ч назад", type: "access_confirmed" },
   { id: "en3", title: "Отправлено на доработку", text: "Hyundai Porter: добавьте фото толщиномера по крыше.", time: "2 ч назад", type: "rework" },
 ];
@@ -1054,10 +1254,9 @@ export const customerNotificationsWithCategoryMock: CustomerNotificationWithCate
 
 function ratingCategoryLabel(c: RatingCategory): string {
   switch (c) {
-    case "top": return "Top";
-    case "good": return "Good";
-    case "normal": return "Normal";
-    case "low": return "Low";
+    case "elevated": return "Повышенный";
+    case "standard": return "Стандартный";
+    case "lowered": return "Пониженный";
     default: return "";
   }
 }
@@ -2293,7 +2492,7 @@ export const adminKpiMock: AdminKpi = {
 export const adminServiceSliceMock: AdminServiceSlice[] = [
   { serviceType: "inspection", serviceLabel: "Инспекция", created: 15, completed: 10, inProgress: 3, notCompleted: 2, avgLeadTimeDays: 2.5 },
   { serviceType: "audit", serviceLabel: "Аудит", created: 12, completed: 7, inProgress: 4, notCompleted: 1, avgLeadTimeDays: 5 },
-  { serviceType: "maintenance", serviceLabel: "Подготовка/ремонт", created: 8, completed: 5, inProgress: 3, notCompleted: 0, avgLeadTimeDays: 7 },
+  { serviceType: "maintenance", serviceLabel: "Обслуживание и ремонт", created: 8, completed: 5, inProgress: 3, notCompleted: 0, avgLeadTimeDays: 7 },
   { serviceType: "sale", serviceLabel: "Продажа под ключ", created: 6, completed: 2, inProgress: 4, notCompleted: 0, avgLeadTimeDays: 14 },
 ];
 
@@ -2388,7 +2587,7 @@ export const accountingKpiMock: AccountingKpi = {
 export const accountingNotClosedMock: AccountingNotClosedItem[] = [
   { id: "nc1", category: "executor_act", categoryLabel: "Нет акта (СБИС)", companyName: "ООО Лизинг Альфа", orderId: "ord2", orderType: "Аудит", whatUnclosed: "Акт от исполнителя не получен", responsible: "Андрей Андреев", daysPending: 3 },
   { id: "nc2", category: "customer_payment", categoryLabel: "Оплата не подтверждена", companyName: "АО ТрансЛогист", orderId: "ord3", orderType: "Обслуживание", whatUnclosed: "Ожидаем подтверждение оплаты", responsible: "Менеджер Сидорова", daysPending: 5 },
-  { id: "nc3", category: "material_invoice", categoryLabel: "Нет счета поставщика", companyName: "ИП Петров", orderId: "prep2", orderType: "Подготовка", whatUnclosed: "Счет на материалы не получен", responsible: "Менеджер Иванов", daysPending: 2 },
+  { id: "nc3", category: "material_invoice", categoryLabel: "Нет счета поставщика", companyName: "ИП Петров", orderId: "prep2", orderType: "Обслуживание", whatUnclosed: "Счет на материалы не получен", responsible: "Менеджер Иванов", daysPending: 2 },
   { id: "nc4", category: "executor_invoice", categoryLabel: "Нет счета от исполнителя", companyName: "ООО Флот Сервис", orderId: "insp1", orderType: "Инспекция", whatUnclosed: "Счет (юрлицо/ИП) не получен", responsible: "Петр Петров", daysPending: 1 },
 ];
 

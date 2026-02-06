@@ -18,7 +18,7 @@ const navItems = [
   { href: "/executor/board", label: "Доска заказов", icon: ClipboardList },
   { href: "/executor/orders", label: "Мои активные", icon: Briefcase },
   { href: "/executor/history", label: "История", icon: History },
-  { href: "/executor/finance", label: "Финансы", icon: Wallet },
+  { href: "/executor/finance", label: "Финансы и ЭДО", icon: Wallet },
   { href: "/executor/profile", label: "Профиль и документы", icon: User },
   { href: "/executor/support", label: "Поддержка", icon: MessageCircle },
 ];

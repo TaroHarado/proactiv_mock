@@ -3,16 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import {
   executorNotificationsMock,
-  customerNotificationsMock,
   customerNotificationsWithCategoryMock,
   managerNotificationsMock,
   adminNotificationsMock,
   accountingNotificationsMock,
+  executorUser,
 } from "@/data/mock";
 
 type CabinetRole = "customer" | "manager" | "executor" | "admin" | "accounting";
@@ -209,6 +209,12 @@ export function Topbar() {
               100 000 200 ₽
             </div>
             <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2">
+              {activeRole === "executor" && executorUser.isVerified && (
+                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-[64px] bg-[var(--app-bg)] px-2.5 py-1 text-xs font-medium text-[var(--gray-icon)]">
+                  <ShieldCheck className="h-4 w-4 text-[var(--blue-50)]" aria-hidden />
+                  Аккаунт верифицирован
+                </span>
+              )}
               <div className="h-9 w-9 rounded-full bg-[#e2e8f0] flex items-center justify-center text-sm font-medium text-[#64748b]">
                 ИИ
               </div>

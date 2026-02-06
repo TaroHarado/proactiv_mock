@@ -96,7 +96,7 @@ export function GlobalFilters({
             <option value="">Все</option>
             <option value="inspection">Инспекция</option>
             <option value="audit">Аудит</option>
-            <option value="maintenance">Подготовка/ремонт</option>
+            <option value="maintenance">Обслуживание и ремонт</option>
             <option value="sale">Под ключ</option>
           </Select>
         </div>
