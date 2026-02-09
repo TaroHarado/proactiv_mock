@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronDown, ShieldCheck } from "lucide-react";
@@ -61,12 +61,44 @@ function getCabinetHref(role: CabinetRole): string {
   return ROLE_CONFIG.find((r) => r.role === role)?.path ?? "/manager";
 }
 
+type VerificationStatus = "unverified" | "pending" | "verified";
+const STORAGE_KEY_STATUS = "executorVerificationStatus";
+
+function getExecutorVerificationStatus(): VerificationStatus {
+  if (typeof window === "undefined") {
+    return (
+      executorUser.verificationStatus ??
+      (executorUser.isVerified ? "verified" : "unverified")
+    );
+  }
+  const stored = window.localStorage.getItem(STORAGE_KEY_STATUS);
+  if (stored === "unverified" || stored === "pending" || stored === "verified") {
+    return stored;
+  }
+  return (
+    executorUser.verificationStatus ??
+    (executorUser.isVerified ? "verified" : "unverified")
+  );
+}
+
 export function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
   const activeRole = getActiveRole(pathname);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isRoleOpen, setIsRoleOpen] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>(() =>
+    getExecutorVerificationStatus()
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handle = () => {
+      setVerificationStatus(getExecutorVerificationStatus());
+    };
+    window.addEventListener("storage", handle);
+    return () => window.removeEventListener("storage", handle);
+  }, []);
 
   const notifications = getNotificationsByRole(activeRole);
   const cabinetHref = getCabinetHref(activeRole);
@@ -209,7 +241,7 @@ export function Topbar() {
               100 000 200 ₽
             </div>
             <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2">
-              {activeRole === "executor" && executorUser.isVerified && (
+              {activeRole === "executor" && verificationStatus === "verified" && (
                 <span className="hidden sm:inline-flex items-center gap-1.5 rounded-[64px] bg-[var(--app-bg)] px-2.5 py-1 text-xs font-medium text-[var(--gray-icon)]">
                   <ShieldCheck className="h-4 w-4 text-[var(--blue-50)]" aria-hidden />
                   Аккаунт верифицирован

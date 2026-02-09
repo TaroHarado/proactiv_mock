@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
+import { AssetTypeIcon } from "@/components/ui/asset-type-icon";
 import {
   getAuditState,
   getDefaultAuditState,
@@ -87,6 +88,7 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [defectSheetOpen, setDefectSheetOpen] = useState(false);
   const [editingDefect, setEditingDefect] = useState<AuditDefect | null>(null);
+  const [submittedBannerVisible, setSubmittedBannerVisible] = useState(false);
 
   const order = state.order;
   const block1 = state.block1;
@@ -116,6 +118,25 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
 
   return (
     <div className="space-y-6">
+      {submittedBannerVisible && (
+        <div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-3 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-[#166534]">
+              Отчёт отправлен на проверку менеджеру
+            </p>
+            <p className="mt-1 text-xs text-[#16a34a]">
+              Это демонстрационный режим: статус заказа в данных не меняется.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="text-xs text-[#16a34a] hover:text-[#15803d]"
+            onClick={() => setSubmittedBannerVisible(false)}
+          >
+            Закрыть
+          </button>
+        </div>
+      )}
       <div className="flex items-center gap-4">
         <Link href="/executor/orders">
           <Button variant="ghost" size="sm" className="gap-1 text-[#2563eb]">
@@ -123,7 +144,10 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
             Назад
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold text-[#0f172a]">{order.assetName}</h1>
+        <div className="flex items-center gap-2">
+          {order.assetType && <AssetTypeIcon type={order.assetType} />}
+          <h1 className="text-2xl font-bold text-[#0f172a]">{order.assetName}</h1>
+        </div>
         <Badge variant="secondary">{order.serviceLabel}</Badge>
         <Badge variant={order.status === "on_review" ? "warning" : "default"}>{order.statusLabel}</Badge>
       </div>
@@ -378,13 +402,51 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
                 </Button>
               </div>
               {!block3.startsOnOwn && (
-                <div className="mt-3 space-y-2">
-                  <p className="text-sm">АКБ есть?</p>
-                  <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => setBlock3({ hasBattery: true })}>Да</Button>
-                    <Button variant="secondary" size="sm" onClick={() => setBlock3({ hasBattery: false })}>Нет</Button>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <p className="text-sm text-[#0f172a]">АКБ есть?</p>
+                    <div className="mt-1 flex gap-2">
+                      <Button
+                        variant={block3.hasBattery === true ? "primary" : "secondary"}
+                        size="sm"
+                        onClick={() => setBlock3({ hasBattery: true })}
+                      >
+                        Да
+                      </Button>
+                      <Button
+                        variant={block3.hasBattery === false ? "primary" : "secondary"}
+                        size="sm"
+                        onClick={() => setBlock3({ hasBattery: false })}
+                      >
+                        Нет
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-xs text-[#64748b]">Фото замера АКБ (вольтметр), требуется замена?</p>
+                  {block3.hasBattery === false && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-[#64748b]">
+                        Требуется замена АКБ?
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={block3.batteryReplaceRequired === true ? "primary" : "secondary"}
+                          size="sm"
+                          className="px-3 h-8 text-xs"
+                          onClick={() => setBlock3({ batteryReplaceRequired: true })}
+                        >
+                          Да
+                        </Button>
+                        <Button
+                          variant={block3.batteryReplaceRequired === false ? "primary" : "secondary"}
+                          size="sm"
+                          className="px-3 h-8 text-xs"
+                          onClick={() => setBlock3({ batteryReplaceRequired: false })}
+                        >
+                          Нет
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="mt-3">
@@ -436,7 +498,15 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
               <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
                 Предпросмотр отчёта
               </Button>
-              <Button variant="primary" size="sm" disabled={!blocksValid}>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!blocksValid}
+                onClick={() => {
+                  if (!blocksValid) return;
+                  setSubmittedBannerVisible(true);
+                }}
+              >
                 Сдать / Отправить на проверку
               </Button>
             </div>
@@ -485,13 +555,69 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
               </ul>
             )}
             <h4 className="mt-3 text-xs font-medium text-[#0f172a]">Толщиномер</h4>
-            <p className="text-xs text-[#64748b]">Панели и точки (таблица)</p>
+            {block2.thicknessPanels.length === 0 ? (
+              <p className="text-xs text-[#64748b]">Измерения толщиномером не заполнены.</p>
+            ) : (
+              <div className="mt-1 space-y-1">
+                {block2.thicknessPanels.map((panel) => (
+                  <div key={panel.id} className="text-xs text-[#0f172a]">
+                    <span className="font-medium">{panel.label}: </span>
+                    {(["p1", "p2", "p3", "p4", "p5"] as const)
+                      .map((k) => (panel.points as Record<string, string>)[k] || "—")
+                      .map((val, idx) => `P${idx + 1}=${val}`)
+                      .join(", ")}
+                  </div>
+                ))}
+              </div>
+            )}
             <h4 className="mt-2 text-xs font-medium text-[#0f172a]">Шины</h4>
-            <p className="text-xs text-[#64748b]">Колёса по осям: протектор, давление</p>
+            {block2.tires.length === 0 ? (
+              <p className="text-xs text-[#64748b]">Данные по шинам не заполнены.</p>
+            ) : (
+              <ul className="mt-1 space-y-1 text-xs text-[#0f172a]">
+                {block2.tires.map((t) => (
+                  <li key={t.id}>
+                    <span className="font-medium">{t.label}:</span>{" "}
+                    протектор {t.treadMm != null ? `${t.treadMm} мм` : "—"}, давление{" "}
+                    {t.pressureBar != null ? `${t.pressureBar} bar` : "—"}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
           <section>
             <h3 className="text-sm font-semibold text-[#0f172a]">Блок 3 — Техсостояние и диагностика</h3>
-            <p className="mt-1 text-xs text-[#64748b]">Запуск: {block3.startsOnOwn ? "да" : "нет"}, течи: {block3.hasLeaks ? "да" : "нет"}, файл диагностики: {block3.diagFile ? "загружен" : "—"}</p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              Запуск: {block3.startsOnOwn ? "да" : "нет"},{" "}
+              АКБ:{" "}
+              {block3.startsOnOwn
+                ? "не проверялась (заводится с первого раза)"
+                : block3.hasBattery === true
+                  ? "есть"
+                  : block3.hasBattery === false
+                    ? "нет"
+                    : "не указано"}
+              , течи: {block3.hasLeaks ? "да" : "нет"}, файл диагностики:{" "}
+              {block3.diagFile ? "загружен" : "—"}
+            </p>
+            {(block3.mileageValue != null || block3.mileageUnit) && (
+              <p className="mt-1 text-xs text-[#64748b]">
+                Пробег / мото-часы:{" "}
+                {block3.mileageValue != null ? block3.mileageValue : "—"}{" "}
+                {block3.mileageUnit === "mh" ? "м/ч" : "км"}
+              </p>
+            )}
+            {!block3.startsOnOwn && (
+              <p className="mt-1 text-xs text-[#64748b]">
+                Фото замера АКБ: {block3.batteryPhoto ? "есть" : "—"},{" "}
+                требуется замена:{" "}
+                {block3.batteryReplaceRequired === true
+                  ? "да"
+                  : block3.batteryReplaceRequired === false
+                    ? "нет"
+                    : "не указано"}
+              </p>
+            )}
             <p className="mt-1 text-xs text-[#64748b]">{block3.diagComment || "—"}</p>
           </section>
         </div>
@@ -729,11 +855,53 @@ function Block2UI({
         {block2.tires.length > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-[#0f172a]">2.5 Шины и давление</p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {block2.tires.map((t) => (
-                <div key={t.id} className="rounded-xl border border-[#e2e8f0] p-2">
-                  <p className="text-xs font-medium text-[#0f172a]">{t.label}</p>
-                  <p className="text-xs text-[#64748b]">Протектор (мм): {t.treadMm ?? "—"} · Давление (bar): {t.pressureBar ?? "—"}</p>
+            <p className="mb-1 text-xs text-[#64748b]">
+              Для каждой позиции укажите остаток протектора и давление в шине.
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {block2.tires.map((tire, idx) => (
+                <div key={tire.id} className="rounded-xl border border-[#e2e8f0] p-3 space-y-2">
+                  <p className="text-xs font-medium text-[#0f172a]">{tire.label}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-24 text-[11px] text-[#64748b]">Протектор (мм)</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      className="h-8 w-20 text-xs"
+                      placeholder="мм"
+                      value={tire.treadMm ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const next = [...block2.tires];
+                        next[idx] = {
+                          ...next[idx],
+                          treadMm: value === "" ? undefined : Number(value),
+                        };
+                        setBlock2({ tires: next });
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-24 text-[11px] text-[#64748b]">Давление (bar)</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      className="h-8 w-20 text-xs"
+                      placeholder="bar"
+                      value={tire.pressureBar ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const next = [...block2.tires];
+                        next[idx] = {
+                          ...next[idx],
+                          pressureBar: value === "" ? undefined : Number(value),
+                        };
+                        setBlock2({ tires: next });
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

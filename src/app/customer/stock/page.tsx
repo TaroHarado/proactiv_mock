@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { AssetTypeIcon } from "@/components/ui/asset-type-icon";
 import {
   stockAssetsMock,
   customerEmployeesMock,
@@ -201,7 +202,7 @@ export default function CustomerStockPage() {
                 <thead>
                   <tr className="border-b border-[#e2e8f0] text-left text-[#64748b]">
                     {selectionMode && <th className="pb-2 pr-2 w-10"><input type="checkbox" checked={selected.size === filteredList.length && filteredList.length > 0} onChange={selectAll} className="rounded" /></th>}
-                    <th className="pb-2 pr-2 w-8">Тип</th>
+                    <th className="pb-2 pr-2 w-10">Тип</th>
                     <th className="pb-2 pr-4">Марка</th>
                     <th className="pb-2 pr-4">Модель</th>
                     <th className="pb-2 pr-4">Год</th>
@@ -225,7 +226,18 @@ export default function CustomerStockPage() {
                           <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggle(a.id)} className="rounded" />
                         </td>
                       )}
-                      <td className="py-2 pr-2 text-[#64748b]">{a.type ? CUSTOMER_ASSET_TYPE_LABELS[a.type].slice(0, 2) : "—"}</td>
+                      <td className="py-2 pr-2 text-[#64748b]">
+                        {a.type ? (
+                          <div className="flex items-center gap-1.5">
+                            <AssetTypeIcon type={a.type} />
+                            <span className="hidden sm:inline text-xs">
+                              {CUSTOMER_ASSET_TYPE_LABELS[a.type].split(" ")[0]}
+                            </span>
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td className="py-2 pr-4 font-medium text-[#0f172a]">{a.brand ?? a.name.split(" ")[0]}</td>
                       <td className="py-2 pr-4">{a.model ?? a.name.split(" ").slice(1).join(" ")}</td>
                       <td className="py-2 pr-4">{a.year}</td>

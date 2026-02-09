@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,9 +90,48 @@ function RatingTooltip({
   );
 }
 
+const STORAGE_KEY_STATUS = "executorVerificationStatus";
+
+type VerificationStatus = "unverified" | "pending" | "verified";
+
+function getCurrentVerificationStatus(): VerificationStatus {
+  if (typeof window === "undefined") {
+    return (
+      executorUser.verificationStatus ??
+      (executorUser.isVerified ? "verified" : "unverified")
+    );
+  }
+  const stored = window.localStorage.getItem(STORAGE_KEY_STATUS);
+  if (stored === "unverified" || stored === "pending" || stored === "verified") {
+    return stored;
+  }
+  return (
+    executorUser.verificationStatus ??
+    (executorUser.isVerified ? "verified" : "unverified")
+  );
+}
+
 export default function ExecutorDashboardPage() {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [ratingTooltipOpen, setRatingTooltipOpen] = useState(false);
   const ratingAnchorRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const status = getCurrentVerificationStatus();
+    if (status !== "verified") {
+      router.replace("/executor/onboarding");
+    }
+  }, [mounted, router]);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">

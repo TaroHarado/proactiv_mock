@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AssetTypeIcon } from "@/components/ui/asset-type-icon";
 import {
   PieChart,
   Pie,
@@ -327,7 +328,7 @@ export default function CustomerDashboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-left text-[var(--gray-icon)]">
-                    <th className="pb-2 pr-2 w-8">Тип</th>
+                    <th className="pb-2 pr-2 w-10">Тип</th>
                     <th className="pb-2 pr-4">Марка</th>
                     <th className="pb-2 pr-4">Модель</th>
                     <th className="pb-2 pr-4">Год</th>
@@ -342,7 +343,18 @@ export default function CustomerDashboardPage() {
                 <tbody>
                   {assetStock.slice(0, 10).map((a) => (
                     <tr key={a.id} className="border-b border-[var(--border)]">
-                      <td className="py-2 pr-2 text-[var(--gray-icon)]">{a.type ? CUSTOMER_ASSET_TYPE_LABELS[a.type].slice(0, 2) : "—"}</td>
+                      <td className="py-2 pr-2 text-[var(--gray-icon)]">
+                        {a.type ? (
+                          <div className="flex items-center gap-1.5">
+                            <AssetTypeIcon type={a.type} />
+                            <span className="hidden sm:inline text-[11px]">
+                              {CUSTOMER_ASSET_TYPE_LABELS[a.type].split(" ")[0]}
+                            </span>
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td className="py-2 pr-4 font-medium text-[var(--black)]">{a.brand ?? a.name.split(" ")[0]}</td>
                       <td className="py-2 pr-4">{a.model ?? a.name.split(" ").slice(1).join(" ")}</td>
                       <td className="py-2 pr-4">{a.year}</td>

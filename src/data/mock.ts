@@ -469,8 +469,36 @@ export interface ExecutorUser {
   avgResponseMinutes: number;
   completedThisMonth: number;
   completedByType: { audit: number; inspection: number; maintenance: number; sale: number };
+  /** Текущий статус верификации аккаунта исполнителя */
+  verificationStatus: "unverified" | "pending" | "verified";
+  /** Маскированный телефон для SMS-блока */
+  phoneMasked?: string;
+  /** Короткий флаг для быстрой проверки (оставлен для обратной совместимости) */
   isVerified: boolean;
   verificationMethod: VerificationMethod;
+  /** Анкета самозанятого (НПД), заполняемая на онбординге */
+  selfEmployedProfile?: {
+    passport: {
+      series: string;
+      number: string;
+      issuedBy: string;
+      issueDate: string;
+      subdivisionCode: string;
+    };
+    bank: {
+      account20: string;
+      bankName: string;
+      bik9: string;
+      corrAccount20: string;
+    };
+    consents: {
+      consent1: boolean;
+      consent2: boolean;
+      consent3: boolean;
+      consent4: boolean;
+    };
+    smsCode: string;
+  };
 }
 
 /** Начисление по заказу со статусом оплаты (для блока «Оплачено по заказам») */
@@ -567,9 +595,9 @@ export const executorUser: ExecutorUser = {
   name: "Андрей Андреев",
   email: "andrey@example.com",
   phone: "+7 999 123-45-67",
-  type: "ip",
-  contractorType: "ip",
-  companyName: "ИП Андреев А.А.",
+  type: "self_employed",
+  contractorType: "npd",
+  companyName: "Самозанятый исполнитель",
   inn: "770712345678",
   requisites: "Расчётный счёт: 40702810100000001234, банк ПАО Сбербанк, БИК 044525225",
   rating: 4.8,
@@ -585,8 +613,10 @@ export const executorUser: ExecutorUser = {
   avgResponseMinutes: 45,
   completedThisMonth: 8,
   completedByType: { audit: 2, inspection: 4, maintenance: 2, sale: 0 },
-  isVerified: true,
-  verificationMethod: "esia",
+  verificationStatus: "unverified",
+  phoneMasked: "+7 *** *** ** 67",
+  isVerified: false,
+  verificationMethod: null,
 };
 
 /** Оплачено по заказам (статусы В обработке / Оплачено) */
