@@ -22,32 +22,10 @@ export default function CustomerBalanceLimitsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[#0f172a]">Баланс и лимиты</h1>
-      <p className="text-sm text-[#64748b]">Номинальный счёт (остаток, реквизиты), договор и акт сверки. Управление лимитами сотрудников. При выставлении лимитов сумма списывается с номинального счёта.</p>
-
-      {/* Номинальный счёт */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Wallet className="h-4 w-4" />
-            Номинальный счёт
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-xl bg-[#f8f9fb] p-4">
-            <p className="text-sm text-[#64748b]">Остаток</p>
-            <p className="text-2xl font-bold text-[#0f172a]">{acc.balance.toLocaleString("ru-RU")} ₽</p>
-          </div>
-          <p className="text-sm text-[#64748b]">{acc.requisites}</p>
-          <div className="flex gap-2">
-            <a href={acc.contractUrl ?? "#"}>
-              <Button variant="outline" size="sm">Договор</Button>
-            </a>
-            <a href={acc.reconciliationActUrl ?? "#"}>
-              <Button variant="outline" size="sm">Акт сверки</Button>
-            </a>
-          </div>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-[#64748b]">
+        Управление лимитами сотрудников на запрос услуг. В этой версии прототипа номинальный счёт
+        не показывается исполнителям.
+      </p>
 
       {/* Сотрудники и лимиты */}
       <Card>

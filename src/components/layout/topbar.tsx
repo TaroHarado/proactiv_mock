@@ -87,12 +87,12 @@ export function Topbar() {
   const activeRole = getActiveRole(pathname);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isRoleOpen, setIsRoleOpen] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>(() =>
-    getExecutorVerificationStatus()
-  );
+  const [mounted, setMounted] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("unverified");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    setMounted(true);
+    setVerificationStatus(getExecutorVerificationStatus());
     const handle = () => {
       setVerificationStatus(getExecutorVerificationStatus());
     };
@@ -237,11 +237,13 @@ export function Topbar() {
                 </>
               )}
             </div>
-            <div className="hidden sm:flex h-9 items-center rounded-full border border-[#2563eb] bg-white px-4 text-xs sm:text-sm font-medium text-[#0f172a]">
-              100 000 200 ₽
-            </div>
+            {activeRole === "customer" && (
+              <div className="hidden sm:flex h-9 items-center rounded-full border border-[#2563eb] bg-white px-4 text-xs sm:text-sm font-medium text-[#0f172a]">
+                100 000 200 ₽
+              </div>
+            )}
             <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2">
-              {activeRole === "executor" && verificationStatus === "verified" && (
+              {mounted && activeRole === "executor" && verificationStatus === "verified" && (
                 <span className="hidden sm:inline-flex items-center gap-1.5 rounded-[64px] bg-[var(--app-bg)] px-2.5 py-1 text-xs font-medium text-[var(--gray-icon)]">
                   <ShieldCheck className="h-4 w-4 text-[var(--blue-50)]" aria-hidden />
                   Аккаунт верифицирован

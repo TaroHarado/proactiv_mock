@@ -7,12 +7,11 @@ const TYPE_CONFIG: Record<
   AssetType,
   { emoji: string; label: string; bg: string; fg: string }
 > = {
-  lcv: { emoji: "🚐", label: "Легковой/LCV", bg: "bg-[#eff6ff]", fg: "text-[#1d4ed8]" },
-  kt: { emoji: "🚛", label: "КТ (тягач/грузовой)", bg: "bg-[#fef9c3]", fg: "text-[#92400e]" },
-  trailer: { emoji: "🚚", label: "Прицеп/полуприцеп", bg: "bg-[#ecfeff]", fg: "text-[#0f766e]" },
-  special: { emoji: "🚜", label: "Спецтехника", bg: "bg-[#f5f3ff]", fg: "text-[#5b21b6]" },
-  passenger: { emoji: "🚗", label: "Легковой", bg: "bg-[#eff6ff]", fg: "text-[#1d4ed8]" },
-  truck: { emoji: "🚛", label: "Грузовой", bg: "bg-[#fef9c3]", fg: "text-[#92400e]" },
+  passenger: { emoji: "🚗", label: "Легковые автомобили", bg: "bg-[#eff6ff]", fg: "text-[#1d4ed8]" },
+  lcv: { emoji: "🚐", label: "Легкий коммерческий транспорт", bg: "bg-[#dbeafe]", fg: "text-[#1e40af]" },
+  truck: { emoji: "🚛", label: "Грузовой транспорт", bg: "bg-[#fef9c3]", fg: "text-[#92400e]" },
+  special: { emoji: "🚜", label: "Спецтехника и спецтранспорт", bg: "bg-[#f5f3ff]", fg: "text-[#5b21b6]" },
+  trailer: { emoji: "🚚", label: "Прицепы и полуприцепы", bg: "bg-[#ecfeff]", fg: "text-[#0f766e]" },
 };
 
 export function AssetTypeIcon({

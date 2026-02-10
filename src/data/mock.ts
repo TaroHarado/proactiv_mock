@@ -532,6 +532,12 @@ export interface BoardOrderCard {
   serviceLabel: string;
   address: string;
   city: string;
+  /** Информация по активу, чтобы на доске было понятно, по чему услуга */
+  assetType?: CustomerAssetType;
+  assetBrand?: string;
+  assetModel?: string;
+  assetYear?: number;
+  assetMileageKm?: number;
   payoutPercent: 60 | 70; // 60% обычный, 70% после перерасчёта
   orderAmount: number;
   payoutAmount: number;
@@ -666,6 +672,11 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Проактивная инспекция",
     address: "Москва, 119002, ул. Арбат, 22/2",
     city: "Москва",
+    assetType: "passenger",
+    assetBrand: "Toyota",
+    assetModel: "Camry",
+    assetYear: 2019,
+    assetMileageKm: 65000,
     payoutPercent: 60,
     orderAmount: 15000,
     payoutAmount: 9000,
@@ -682,6 +693,11 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Технико-финансовый аудит",
     address: "Санкт-Петербург, Невский пр., 100",
     city: "Санкт-Петербург",
+    assetType: "truck",
+    assetBrand: "KamAZ",
+    assetModel: "5490",
+    assetYear: 2018,
+    assetMileageKm: 280000,
     payoutPercent: 70,
     orderAmount: 20000,
     payoutAmount: 14000,
@@ -697,6 +713,11 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Обслуживание и ремонт",
     address: "Москва, Тверской б-р, 26A",
     city: "Москва",
+    assetType: "lcv",
+    assetBrand: "Hyundai",
+    assetModel: "Porter",
+    assetYear: 2019,
+    assetMileageKm: 120000,
     payoutPercent: 60,
     orderAmount: 25000,
     payoutAmount: 15000,
@@ -713,6 +734,11 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Проактивная инспекция",
     address: "Казань, ул. Баумана, 58",
     city: "Казань",
+    assetType: "truck",
+    assetBrand: "Mercedes-Benz",
+    assetModel: "Actros",
+    assetYear: 2019,
+    assetMileageKm: 280000,
     payoutPercent: 60,
     orderAmount: 12000,
     payoutAmount: 7200,
@@ -728,6 +754,11 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Технико-финансовый аудит",
     address: "Новосибирск, Красный пр., 77",
     city: "Новосибирск",
+    assetType: "truck",
+    assetBrand: "Volvo",
+    assetModel: "FH 16",
+    assetYear: 2020,
+    assetMileageKm: 150000,
     payoutPercent: 70,
     orderAmount: 22000,
     payoutAmount: 15400,
@@ -735,7 +766,8 @@ export const boardOrdersMock: BoardOrderCard[] = [
     minutesPending: 65,
     rejectionsCount: 0,
     requiresAccessAgreement: true,
-    exclusiveForTop: true,
+    // Заказ уже в высоком приоритете, но доступ не эксклюзивный
+    exclusiveForTop: false,
   },
   {
     id: "b6",
@@ -743,6 +775,10 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Обслуживание и ремонт",
     address: "Екатеринбург, ул. Малышева, 36",
     city: "Екатеринбург",
+    assetType: "special",
+    assetBrand: "CAT",
+    assetModel: "320",
+    assetYear: 2018,
     payoutPercent: 60,
     orderAmount: 18000,
     payoutAmount: 10800,
@@ -759,6 +795,10 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Проактивная инспекция",
     address: "Нижний Новгород, ул. Рождественская, 6",
     city: "Нижний Новгород",
+    assetType: "trailer",
+    assetBrand: "Schmitz",
+    assetModel: "S.KO",
+    assetYear: 2018,
     payoutPercent: 60,
     orderAmount: 14000,
     payoutAmount: 8400,
@@ -774,6 +814,10 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Технико-финансовый аудит",
     address: "Самара, ул. Куйбышева, 100",
     city: "Самара",
+    assetType: "truck",
+    assetBrand: "MAN",
+    assetModel: "TGX",
+    assetYear: 2020,
     payoutPercent: 70,
     orderAmount: 19000,
     payoutAmount: 13300,
@@ -789,6 +833,10 @@ export const boardOrdersMock: BoardOrderCard[] = [
     serviceLabel: "Обслуживание и ремонт",
     address: "Ростов-на-Дону, ул. Большая Садовая, 47",
     city: "Ростов-на-Дону",
+    assetType: "truck",
+    assetBrand: "Scania",
+    assetModel: "R 450",
+    assetYear: 2019,
     payoutPercent: 60,
     orderAmount: 28000,
     payoutAmount: 16800,
@@ -1013,7 +1061,7 @@ export const accountingNotificationsMock: RoleNotification[] = [
 
 // ——— Моки кабинета заказчика: сток активов и заказы ———
 
-export type CustomerAssetType = "passenger" | "lcv" | "truck" | "trailer" | "special";
+export type CustomerAssetType = "passenger" | "lcv" | "truck" | "special" | "trailer";
 
 export interface StockAsset {
   id: string;
@@ -1296,7 +1344,7 @@ export function getRatingCategoryLabel(c: RatingCategory) {
 
 // ——— Аудит: моки и типы для UX-flow ———
 
-export type AuditAssetType = "lcv" | "kt" | "trailer" | "special";
+export type AuditAssetType = "passenger" | "lcv" | "truck" | "special" | "trailer";
 export type SpecialChassis = "wheeled" | "tracked";
 export type DefectImpact = "low" | "medium" | "high";
 export type DefectType =
@@ -1333,6 +1381,7 @@ export interface AuditBlock1 {
   vinFrameNotApplicable?: boolean;
   identificationComment?: string;
   overviewPhotos: { id: string; label: string; photo?: string; hasGeo?: boolean; hasTime?: boolean }[];
+  interiorPhotos: { id: string; label: string; photo?: string }[];
 }
 
 export interface AuditDefect {
@@ -1354,7 +1403,7 @@ export interface AuditDefect {
 export interface ThicknessPanel {
   id: string;
   label: string;
-  points: { p1?: string; p2?: string; p3?: string; p4?: string; p5?: string };
+  points: { p1?: string; p2?: string };
 }
 
 export interface TireReading {
@@ -1378,20 +1427,25 @@ export interface AuditBlock2 {
   trackReadings?: { id: string; label: string; done: boolean; photo?: string }[];
 }
 
+export interface UnderhoodIssue {
+  id: string;
+  type: "leak" | "noise";
+  name: string;
+  fieldFixable: boolean;
+  normHours?: number;
+  parts?: string;
+}
+
 export interface AuditBlock3 {
-  startsOnOwn: boolean;
-  hasBattery?: boolean;
-  batteryPhoto?: string;
+  startsOnOwn: "yes" | "no" | "booster" | null;
+  batteryVoltage?: number;
   batteryReplaceRequired?: boolean;
   dashboardPhoto?: string;
   odometerPhoto?: string;
   mileageValue?: number;
   mileageUnit?: "km" | "mh";
   underhoodPhoto?: string;
-  hasLeaks: boolean;
-  leaksFieldFixable?: boolean;
-  leaksNormHours?: number;
-  leaksMaterialsComment?: string;
+  underhoodIssues: UnderhoodIssue[];
   diagFile?: string;
   diagComment?: string;
 }
@@ -1469,7 +1523,7 @@ export const auditOrdersMock: Record<string, AuditState> = {
       status: "in_progress",
       statusLabel: "В работе",
       accessAgreed: true,
-      assetType: "kt",
+      assetType: "truck",
       axesCount: 3,
     },
     step0Access: "yes",
@@ -1482,9 +1536,15 @@ export const auditOrdersMock: Record<string, AuditState> = {
         { id: "o5", label: "45° сзади слева" },
         { id: "o6", label: "45° сзади справа" },
       ],
+      interiorPhotos: [
+        { id: "i1", label: "Передняя панель во всю длину" },
+        { id: "i2", label: "Приборная панель с пробегом" },
+        { id: "i3", label: "Передние кресла" },
+        { id: "i4", label: "Задние сидения" },
+      ],
     },
     block2: {
-      assetType: "kt",
+      assetType: "truck",
       axesCount: 3,
       hasDefects: true,
       defects: [
@@ -1503,11 +1563,7 @@ export const auditOrdersMock: Record<string, AuditState> = {
           isNonField: false,
         },
       ],
-      thicknessPanels: THICKNESS_PANELS_KT.map((label, i) => ({
-        id: `t${i}`,
-        label,
-        points: {},
-      })),
+      thicknessPanels: [],
       tires: [
         { id: "w1", label: "Ось 1 лев" },
         { id: "w2", label: "Ось 1 прав" },
@@ -1518,8 +1574,8 @@ export const auditOrdersMock: Record<string, AuditState> = {
       ],
     },
     block3: {
-      startsOnOwn: true,
-      hasLeaks: false,
+      startsOnOwn: "yes",
+      underhoodIssues: [],
       mileageValue: 120000,
       mileageUnit: "km",
       diagComment: "Диагностика проведена, ошибок нет.",
@@ -1568,6 +1624,12 @@ export const auditOrdersMock: Record<string, AuditState> = {
         { id: "o5", label: "45° сзади слева" },
         { id: "o6", label: "45° сзади справа" },
       ],
+      interiorPhotos: [
+        { id: "i1", label: "Передняя панель во всю длину" },
+        { id: "i2", label: "Приборная панель с пробегом" },
+        { id: "i3", label: "Передние кресла" },
+        { id: "i4", label: "Задние сидения" },
+      ],
     },
     block2: {
       assetType: "lcv",
@@ -1582,8 +1644,8 @@ export const auditOrdersMock: Record<string, AuditState> = {
       ],
     },
     block3: {
-      startsOnOwn: true,
-      hasLeaks: false,
+      startsOnOwn: "yes",
+      underhoodIssues: [],
       mileageValue: 56000,
       mileageUnit: "km",
       diagFile: "diag.pdf",
@@ -1636,6 +1698,12 @@ export const auditOrdersMock: Record<string, AuditState> = {
         { id: "o5", label: "45° сзади слева" },
         { id: "o6", label: "45° сзади справа" },
       ],
+      interiorPhotos: [
+        { id: "i1", label: "Передняя панель во всю длину" },
+        { id: "i2", label: "Приборная панель с пробегом" },
+        { id: "i3", label: "Передние кресла" },
+        { id: "i4", label: "Задние сидения" },
+      ],
     },
     block2: {
       assetType: "special",
@@ -1652,8 +1720,8 @@ export const auditOrdersMock: Record<string, AuditState> = {
       ],
     },
     block3: {
-      startsOnOwn: true,
-      hasLeaks: false,
+      startsOnOwn: "yes",
+      underhoodIssues: [],
     },
   },
 };
@@ -1689,6 +1757,12 @@ export function getDefaultAuditState(
     },
     step0Access: "pending",
     block1: {
+      interiorPhotos: [
+        { id: "i1", label: "Передняя панель во всю длину" },
+        { id: "i2", label: "Приборная панель с пробегом" },
+        { id: "i3", label: "Передние кресла" },
+        { id: "i4", label: "Задние сидения" },
+      ],
       overviewPhotos: OVERVIEW_LABELS.map((label, i) => ({
         id: `o${i + 1}`,
         label,
@@ -1701,8 +1775,8 @@ export function getDefaultAuditState(
       tires: [],
     },
     block3: {
-      startsOnOwn: false,
-      hasLeaks: false,
+      startsOnOwn: null,
+      underhoodIssues: [],
     },
   };
 }
@@ -2302,7 +2376,7 @@ export function getSaleOrderByAssetId(assetId: string): SaleOrder | undefined {
 
 // ——— Инспекция (Inspection) ———
 
-export type InspectionAssetType = "la_lal" | "lcv" | "kt" | "special" | "trailer";
+export type InspectionAssetType = "passenger" | "lcv" | "truck" | "special" | "trailer";
 
 export type InspectionOrderStatus = "new" | "access_pending" | "in_progress" | "on_review" | "completed" | "on_rework";
 
@@ -2370,8 +2444,8 @@ export const inspectionOrdersMock: InspectionOrder[] = [
   },
   {
     id: "insp2",
-    assetType: "kt",
-    assetTypeLabel: "КТ",
+    assetType: "truck",
+    assetTypeLabel: "Грузовой транспорт",
     vin: "WF0XXXTTX1234567",
     brandModel: "Mercedes Actros",
     contractNumber: "Д-2025-002",
@@ -2389,8 +2463,8 @@ export const inspectionOrdersMock: InspectionOrder[] = [
   },
   {
     id: "insp3",
-    assetType: "kt",
-    assetTypeLabel: "КТ",
+    assetType: "truck",
+    assetTypeLabel: "Грузовой транспорт",
     vin: "YV1LS56A1X1234567",
     brandModel: "Volvo FH 16",
     contractNumber: "Д-2025-003",

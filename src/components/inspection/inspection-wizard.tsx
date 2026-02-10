@@ -158,7 +158,7 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
           <CardHeader>
             <CardTitle className="text-base">Инспекция — 3 блока</CardTitle>
             <p className="mt-1 text-sm text-[#64748b]">
-              Блок 1: идентификация + 6 обзорных + VIN фото. Блок 2: дефекты по
+              Блок 1: идентификация + 6 обзорных + VIN фото. Блок 2: визуальная фиксация состояния по
               схеме. Блок 3: техчек (запуск, приборка, одометр, подкапотное, течи).
             </p>
           </CardHeader>
@@ -222,7 +222,7 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
             {step === "block2" && (
               <section className="space-y-3">
                 <p className="text-sm font-medium text-[#0f172a]">
-                  Блок 2 — Дефекты по схеме
+                  Блок 2 — Визуальная фиксация состояния
                 </p>
                 <p className="text-xs text-[#64748b]">
                   Отметьте, есть ли деформации, сколы, коррозия и другие дефекты по
@@ -404,7 +404,7 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
           </section>
           <section>
             <h3 className="text-sm font-semibold text-[#0f172a]">
-              Блок 2 — Дефекты по схеме
+              Блок 2 — Визуальная фиксация состояния
             </h3>
             <p className="mt-1 text-xs text-[#64748b]">
               Дефекты:{" "}

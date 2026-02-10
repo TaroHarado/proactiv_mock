@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { boardOrdersMock } from "@/data/mock";
 import { Clock, MapPin, MessageCircle, FileText, LayoutGrid, List } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sheet } from "@/components/ui/sheet";
+import { AssetTypeIcon } from "@/components/ui/asset-type-icon";
 
 function formatMinutes(m: number) {
   if (m < 60) return `${m} мин`;
@@ -32,9 +34,11 @@ type ViewMode = "cards" | "table";
 function BoardOrderCardRow({
   order,
   formatMinutes,
+  onPreview,
 }: {
   order: (typeof boardOrdersMock)[0];
   formatMinutes: (m: number) => string;
+  onPreview: (order: (typeof boardOrdersMock)[0]) => void;
 }) {
   return (
     <Card
@@ -63,8 +67,20 @@ function BoardOrderCardRow({
           <MapPin className="h-4 w-4 shrink-0" />
           {order.address}
         </div>
-        {order.requiresAccessAgreement && (
-          <p className="text-xs text-[var(--gray-icon)]">Требуется согласование доступа заказчиком</p>
+        {order.assetBrand && (
+          <div className="mt-1 flex items-center gap-2 text-sm text-[var(--gray-icon)]">
+            <AssetTypeIcon type={order.assetType} />
+            <div className="flex flex-col">
+              <span className="font-medium text-[var(--black)]">
+                {[order.assetBrand, order.assetModel].filter(Boolean).join(" ")}
+              </span>
+              <span className="text-xs text-[var(--gray-icon)]">
+                {order.assetYear && `${order.assetYear} г.`}
+                {order.assetMileageKm != null &&
+                  ` · ${order.assetMileageKm.toLocaleString("ru-RU")} км`}
+              </span>
+            </div>
+          </div>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
@@ -79,12 +95,15 @@ function BoardOrderCardRow({
           Висит: {formatMinutes(order.minutesPending)} · Отказов: {order.rejectionsCount}
         </div>
         <div className="flex flex-wrap gap-2 pt-2">
-          <Link href={`/executor/orders/${order.id}`}>
-            <Button variant="outline" size="sm" className="gap-1">
-              <FileText className="h-4 w-4" />
-              Ознакомиться с заказом
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            onClick={() => onPreview(order)}
+          >
+            <FileText className="h-4 w-4" />
+            Ознакомиться с заказом
+          </Button>
           <Button variant="primary" size="sm" className="flex-1 sm:flex-none">
             Принять
           </Button>
@@ -102,6 +121,7 @@ function BoardOrderCardRow({
 export default function ExecutorBoardPage() {
   const sortedOrders = useMemo(() => sortBoardOrders(boardOrdersMock), []);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [previewOrder, setPreviewOrder] = useState<(typeof boardOrdersMock)[0] | null>(null);
 
   return (
     <div className="space-y-6">
@@ -142,7 +162,12 @@ export default function ExecutorBoardPage() {
       {viewMode === "cards" && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sortedOrders.map((order) => (
-            <BoardOrderCardRow key={order.id} order={order} formatMinutes={formatMinutes} />
+            <BoardOrderCardRow
+              key={order.id}
+              order={order}
+              formatMinutes={formatMinutes}
+              onPreview={(o) => setPreviewOrder(o)}
+            />
           ))}
         </div>
       )}
@@ -171,6 +196,17 @@ export default function ExecutorBoardPage() {
                   <td className="px-4 py-3">
                     <p className="font-medium text-[var(--black)]">{order.serviceLabel}</p>
                     <p className="text-xs text-[var(--gray-icon)]">{order.address}</p>
+                    {order.assetBrand && (
+                      <div className="mt-1 flex items-center gap-2 text-xs text-[var(--gray-icon)]">
+                        <AssetTypeIcon type={order.assetType} />
+                        <span>
+                          {[order.assetBrand, order.assetModel].filter(Boolean).join(" ")}
+                          {order.assetYear && `, ${order.assetYear} г.`}
+                          {order.assetMileageKm != null &&
+                            ` · ${order.assetMileageKm.toLocaleString("ru-RU")} км`}
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-semibold text-[var(--black)]">
                     {order.payoutAmount.toLocaleString("ru")} ₽
@@ -193,12 +229,15 @@ export default function ExecutorBoardPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      <Link href={`/executor/orders/${order.id}`}>
-                        <Button variant="outline" size="sm" className="gap-1">
-                          <FileText className="h-4 w-4" />
-                          Ознакомиться
-                        </Button>
-                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => setPreviewOrder(order)}
+                      >
+                        <FileText className="h-4 w-4" />
+                        Ознакомиться
+                      </Button>
                       <Button variant="primary" size="sm">Принять</Button>
                       <Button variant="secondary" size="sm">Отказаться</Button>
                       <Button variant="ghost" size="sm" className="gap-1">
@@ -212,6 +251,57 @@ export default function ExecutorBoardPage() {
           </table>
         </div>
       )}
+
+      <Sheet
+        open={!!previewOrder}
+        onOpenChange={(open) => {
+          if (!open) setPreviewOrder(null);
+        }}
+        title="Просмотр заказа"
+      >
+        {previewOrder && (
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                {previewOrder.assetType && <AssetTypeIcon type={previewOrder.assetType} />}
+                <h2 className="text-lg font-semibold text-[var(--black)]">
+                  {previewOrder.serviceLabel}
+                </h2>
+              </div>
+              {previewOrder.assetBrand && (
+                <p className="text-sm text-[var(--black)]">
+                  {[previewOrder.assetBrand, previewOrder.assetModel].filter(Boolean).join(" ")}
+                  {previewOrder.assetYear && `, ${previewOrder.assetYear} г.`}
+                  {previewOrder.assetMileageKm != null &&
+                    ` · ${previewOrder.assetMileageKm.toLocaleString("ru-RU")} км`}
+                </p>
+              )}
+              <p className="flex items-center gap-1 text-sm text-[var(--gray-icon)]">
+                <MapPin className="h-4 w-4 shrink-0" />
+                {previewOrder.address}
+              </p>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--app-bg)] p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-[var(--gray-icon)]">Выплата исполнителю</span>
+                <span className="font-semibold text-[var(--black)]">
+                  {previewOrder.payoutAmount.toLocaleString("ru-RU")} ₽
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-[var(--gray-icon)]">
+                <Clock className="h-4 w-4 shrink-0" />
+                Висит: {formatMinutes(previewOrder.minutesPending)} · Отказов:{" "}
+                {previewOrder.rejectionsCount}
+              </div>
+            </div>
+
+            <p className="text-xs text-[var(--gray-icon)]">
+              Режим ознакомления. Чтобы принять заказ, вернитесь на доску и нажмите «Принять».
+            </p>
+          </div>
+        )}
+      </Sheet>
     </div>
   );
 }

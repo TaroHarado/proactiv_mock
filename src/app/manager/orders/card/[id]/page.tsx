@@ -254,9 +254,21 @@ export default function OrderCardPage() {
               <section>
                 <h3 className="text-sm font-semibold text-[#0f172a]">Блок 3 — Техсостояние и диагностика</h3>
                 <p className="mt-1 text-xs text-[#64748b]">
-                  Запуск: {auditState.block3.startsOnOwn ? "да" : "нет"}, течи: {auditState.block3.hasLeaks ? "да" : "нет"}, файл: {auditState.block3.diagFile ? "загружен" : "—"}
+                  Запуск:{" "}
+                  {auditState.block3.startsOnOwn === "yes"
+                    ? "да"
+                    : auditState.block3.startsOnOwn === "no"
+                      ? "нет"
+                      : auditState.block3.startsOnOwn === "booster"
+                        ? "с помощью бустера"
+                        : "не указано"}
+                  {auditState.block3.underhoodIssues.length > 0 && `, проблемы подкапотного: ${auditState.block3.underhoodIssues.length}`}
+                  , файл: {auditState.block3.diagFile ? "загружен" : "—"}
                 </p>
-                <p className="mt-1 text-xs text-[#64748b]">{auditState.block3.diagComment || "—"}</p>
+                <div className="mt-2">
+                  <p className="text-xs font-medium text-[#0f172a]">Общий комментарий по техническому состоянию:</p>
+                  <p className="mt-1 text-xs text-[#64748b]">{auditState.block3.diagComment || "—"}</p>
+                </div>
               </section>
               <div className="rounded-xl border border-[#e2e8f0] bg-[#f8f9fb] p-4">
                 <p className="mb-2 text-sm font-medium text-[#0f172a]">Оценка качества исполнителя (1–5, шаг 0.1)</p>

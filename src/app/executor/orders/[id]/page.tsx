@@ -67,9 +67,6 @@ export default function ExecutorOrderDetailPage() {
                 <MapPin className="h-4 w-4 shrink-0" />
                 {boardOrder.address}
               </div>
-              {boardOrder.requiresAccessAgreement && (
-                <p className="text-xs text-[var(--gray-icon)]">Требуется согласование доступа заказчиком</p>
-              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
