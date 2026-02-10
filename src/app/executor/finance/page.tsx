@@ -7,22 +7,12 @@ import {
   executorMonthlyEarningsMock,
   executorAccrualsPaidMock,
   executorEdoDocsMock,
-  executorUser,
-  type EdoDocStatus,
 } from "@/data/mock";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
-import { FileSignature } from "lucide-react";
-
-function edoStatusLabel(status: EdoDocStatus, type: "act" | "upd"): string {
-  if (status === "sent") return type === "act" ? "Акт отправлен в ЭДО" : "УПД отправлен в ЭДО";
-  if (status === "awaiting_signature") return "Ожидает подписи";
-  return "Подписан";
-}
 
 export default function ExecutorFinancePage() {
   const data = executorMonthlyEarningsMock;
   const lastIndex = data.length - 1;
-  const isNpd = executorUser.contractorType === "npd";
 
   return (
     <div className="space-y-6">
@@ -97,14 +87,14 @@ export default function ExecutorFinancePage() {
         </CardContent>
       </Card>
 
-      {/* ЭДО (СБИС, заглушка) */}
+      {/* ЭДО (СБИС) */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">ЭДО (СБИС)</CardTitle>
+          <CardTitle className="text-lg">Подписанные документы ЭДО (СБИС)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-[var(--gray-icon)]">
-            Документы для подписания в системе электронного документооборота.
+            Договоры-задания и акты выполненных работ, подписанные в системе электронного документооборота.
           </p>
           <ul className="space-y-3">
             {executorEdoDocsMock.map((doc) => (
@@ -112,44 +102,27 @@ export default function ExecutorFinancePage() {
                 key={doc.id}
                 className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--app-bg)] p-4"
               >
-                <div>
-                  <p className="font-medium text-[var(--black)]">
-                    {doc.type === "act" ? "Акт" : "УПД"}
-                    {doc.description ? ` — ${doc.description}` : ""}
-                  </p>
-                  <p className="text-sm text-[var(--gray-icon)]">
-                    {edoStatusLabel(doc.status, doc.type)}
-                  </p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-[var(--black)]">
+                      {doc.type === "act" ? "Акт" : "УПД"}
+                      {doc.description ? ` — ${doc.description}` : ""}
+                    </p>
+                    <Badge variant="success">Подписан</Badge>
+                  </div>
                   <p className="text-xs text-[var(--gray-icon)] mt-1">
-                    Обновлено: {new Date(doc.lastUpdate).toLocaleString("ru-RU")}
+                    Подписано: {new Date(doc.lastUpdate).toLocaleString("ru-RU")}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {doc.status !== "signed" &&
-                    doc.signMethodsAvailable.includes("pep") &&
-                    isNpd && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => {}}
-                      >
-                        <FileSignature className="h-4 w-4" />
-                        Подписать (ПЭП)
-                      </Button>
-                    )}
-                  {doc.status !== "signed" && doc.signMethodsAvailable.includes("kep") && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => {}}
-                    >
-                      <FileSignature className="h-4 w-4" />
-                      Подписать (КЭП СБИС)
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // TODO: Скачать документ
+                  }}
+                >
+                  Скачать
+                </Button>
               </li>
             ))}
           </ul>
