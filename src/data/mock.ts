@@ -432,6 +432,7 @@ export const dashboardMetrics = {
 
 export type ExecutorOrderStatus =
   | "needs_contract_sign" // Принят, нужно подписать договор-задание
+  | "materials_ready" // Запчасти доставлены — необходимо забрать
   | "access_pending"
   | "in_progress"
   | "on_review"
@@ -568,6 +569,11 @@ export interface ExecutorActiveOrder {
   deadline?: string;
   edoDocId?: string; // ID документа ЭДО для подписания (договор-задание или акт)
   edoSignMethods?: EdoSignMethod[]; // доступные методы подписи
+  materialsPickupInfo?: {
+    address: string;
+    schedule: string;
+    phone: string;
+  };
 }
 
 export interface ExecutorCompletedOrder {
@@ -877,6 +883,27 @@ export function getBoardOrderById(id: string): BoardOrderCard | undefined {
 }
 
 export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
+  // Обслуживание с готовыми запчастями
+  {
+    id: "maint_materials_ready",
+    assetName: "Mercedes-Benz Actros",
+    serviceType: "maintenance",
+    serviceLabel: "Обслуживание и ремонт",
+    status: "materials_ready",
+    statusLabel: "Запчасти доставлены — необходимо забрать",
+    address: "Москва, Ленинградское ш., 25",
+    accessAgreed: true,
+    deadline: "2025-02-12",
+    dueDate: "2026-02-12", // Есть время
+    acceptedAt: "2026-02-08T09:00:00",
+    overdue: false,
+    overdueDays: 0,
+    materialsPickupInfo: {
+      address: "г. Москва, ул. Костромская, д. 14А",
+      schedule: "ПН-ПТ с 09:00 до 18:00",
+      phone: "+7 (499) 700-88-71",
+    },
+  },
   // Аудит
   {
     id: "ord2",

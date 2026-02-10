@@ -15,6 +15,7 @@ const executorOrders = executorActiveOrdersMock.filter((o) => o.serviceType !== 
 
 const statusVariant: Record<string, "default" | "secondary" | "warning" | "outline"> = {
   needs_contract_sign: "warning",
+  materials_ready: "warning",
   access_pending: "warning",
   in_progress: "default",
   on_review: "secondary",
@@ -54,6 +55,31 @@ export default function ExecutorOrdersPage() {
                       </span>
                     )}
                   </div>
+                  {o.status === "materials_ready" && o.materialsPickupInfo && (
+                    <div className="rounded-xl border border-[#fbbf24] bg-[#fffbeb] p-3 space-y-1">
+                      <p className="text-sm font-medium text-[#92400e]">
+                        📦 Пункт выдачи запчастей:
+                      </p>
+                      <p className="text-xs text-[#78350f]">
+                        <strong>Адрес:</strong> {o.materialsPickupInfo.address}
+                      </p>
+                      <p className="text-xs text-[#78350f]">
+                        <strong>График:</strong> {o.materialsPickupInfo.schedule}
+                      </p>
+                      <p className="text-xs text-[#78350f]">
+                        <strong>Телефон:</strong>{" "}
+                        <a
+                          href={`tel:${o.materialsPickupInfo.phone.replace(/\s/g, "")}`}
+                          className="underline hover:text-[#92400e]"
+                        >
+                          {o.materialsPickupInfo.phone}
+                        </a>
+                      </p>
+                      <p className="text-xs text-[#92400e] italic mt-2">
+                        Перед приездом свяжитесь с менеджером по телефону
+                      </p>
+                    </div>
+                  )}
                   {o.dueDate && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
