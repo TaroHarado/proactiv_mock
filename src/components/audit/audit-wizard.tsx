@@ -540,7 +540,7 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
                         {issue.type === "leak" ? "Течь" : "Шум"}: {issue.name}
                       </p>
                       <p className="text-xs text-[#64748b]">
-                        Устр. в полевых: {issue.fieldFixable ? "да" : "нет"}
+                        Влияние: {IMPACT_LABELS[issue.impact]}, устр. в полевых: {issue.fieldFixable ? "да" : "нет"}
                         {issue.normHours != null && `, ${issue.normHours} н/ч`}
                         {issue.parts && `, запчасти: ${issue.parts}`}
                       </p>
@@ -708,7 +708,7 @@ export function AuditWizard({ orderId, order: orderInfo }: AuditWizardProps) {
                 <ul className="mt-1 space-y-1 text-xs text-[#64748b]">
                   {block3.underhoodIssues.map((issue) => (
                     <li key={issue.id}>
-                      {issue.type === "leak" ? "Течь" : "Шум"}: {issue.name}
+                      {issue.type === "leak" ? "Течь" : "Шум"}: {issue.name}, влияние: {IMPACT_LABELS[issue.impact]}
                       {issue.fieldFixable && issue.normHours && `, ${issue.normHours} н/ч`}
                       {issue.parts && `, запчасти: ${issue.parts}`}
                     </li>
@@ -1203,6 +1203,7 @@ function UnderhoodIssueFormSheet({
 }) {
   const [type, setType] = useState<"leak" | "noise">("leak");
   const [name, setName] = useState("");
+  const [impact, setImpact] = useState<DefectImpact>("low");
   const [fieldFixable, setFieldFixable] = useState(false);
   const [normHours, setNormHours] = useState("");
   const [parts, setParts] = useState("");
@@ -1212,12 +1213,14 @@ function UnderhoodIssueFormSheet({
       id: `uh${Date.now()}`,
       type,
       name,
+      impact,
       fieldFixable,
       normHours: normHours ? Number(normHours) : undefined,
       parts: parts.trim() || undefined,
     });
     setType("leak");
     setName("");
+    setImpact("low");
     setFieldFixable(false);
     setNormHours("");
     setParts("");
@@ -1242,8 +1245,16 @@ function UnderhoodIssueFormSheet({
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Например: Разрушение ЛКП, impact low"
+            placeholder="Например: Течь масла из двигателя"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[#0f172a]">Влияние на товарную привлекательность</label>
+          <Select value={impact} onChange={(e) => setImpact(e.target.value as DefectImpact)}>
+            {Object.entries(IMPACT_LABELS).map(([k, l]) => (
+              <option key={k} value={k}>{l}</option>
+            ))}
+          </Select>
         </div>
         <div>
           <p className="text-sm font-medium text-[#0f172a]">Устранимо в полевых условиях?</p>

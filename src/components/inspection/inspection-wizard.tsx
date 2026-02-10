@@ -9,12 +9,35 @@ import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import type { InspectionOrder } from "@/data/mock";
 import {
+  DEFECT_ZONES_LCV,
+  DEFECT_TYPE_LABELS,
+  type DefectType,
+  type DefectImpact,
+} from "@/data/mock";
+import {
   ArrowLeft,
   Camera,
   CheckCircle,
   FileText,
   MessageCircle,
+  Plus,
+  X,
 } from "lucide-react";
+import { Select } from "@/components/ui/select";
+
+interface InspectionDefect {
+  id: string;
+  zone: string;
+  defectType: DefectType;
+  impact: DefectImpact;
+  comment: string;
+}
+
+const IMPACT_LABELS: Record<DefectImpact, string> = {
+  low: "Низкая",
+  medium: "Средняя",
+  high: "Высокая",
+};
 
 interface InspectionWizardProps {
   order: InspectionOrder;
@@ -30,8 +53,14 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
   const [overviewPhotos, setOverviewPhotos] = useState<boolean[]>(
     Array.from({ length: 6 }, () => false)
   );
+  const [interiorAccess, setInteriorAccess] = useState<boolean | null>(null);
+  const [interiorPhotos, setInteriorPhotos] = useState<boolean[]>(
+    Array.from({ length: 4 }, () => false)
+  );
   const [hasDefects, setHasDefects] = useState<boolean | null>(null);
-  const [defectsComment, setDefectsComment] = useState("");
+  const [defects, setDefects] = useState<InspectionDefect[]>([]);
+  const [defectSheetOpen, setDefectSheetOpen] = useState(false);
+  const [editingDefect, setEditingDefect] = useState<InspectionDefect | null>(null);
   const [startsOnOwn, setStartsOnOwn] = useState<boolean | null>(null);
   const [mileage, setMileage] = useState<string>("");
   const [hasLeaks, setHasLeaks] = useState<boolean | null>(null);
@@ -41,12 +70,15 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
 
   const allOverviewDone = overviewPhotos.every(Boolean);
   const block1Done = vinPhoto && allOverviewDone;
+  const interiorPhotosDone = interiorAccess === false || (interiorAccess === true && interiorPhotos.every(Boolean));
   const block2Done =
-    hasDefects === false || (hasDefects === true && defectsComment.trim().length > 0);
+    hasDefects === false || (hasDefects === true && defects.length > 0);
   const block3Done =
-    startsOnOwn !== null && hasLeaks !== null && techComment.trim().length > 0;
+    interiorAccess === false
+      ? techComment.trim().length > 0
+      : startsOnOwn !== null && hasLeaks !== null && techComment.trim().length > 0;
 
-  const canSubmit = accessYes === true && block1Done && block2Done && block3Done;
+  const canSubmit = accessYes === true && block1Done && interiorPhotosDone && block2Done && block3Done;
 
   return (
     <div className="space-y-6">
@@ -156,11 +188,7 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
       {accessYes && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Инспекция — 3 блока</CardTitle>
-            <p className="mt-1 text-sm text-[#64748b]">
-              Блок 1: идентификация + 6 обзорных + VIN фото. Блок 2: визуальная фиксация состояния по
-              схеме. Блок 3: техчек (запуск, приборка, одометр, подкапотное, течи).
-            </p>
+            <CardTitle className="text-base">Услуга инспекция</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Блок 1 */}
@@ -205,16 +233,75 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    disabled={!block1Done}
-                    onClick={() => setStep("block2")}
-                  >
-                    Перейти к блоку 2
-                  </Button>
+                <div className="mt-4 pt-4 border-t border-[#e2e8f0]">
+                  <p className="text-sm font-medium text-[#0f172a] mb-2">
+                    Есть ли доступ внутрь автомобиля?
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={interiorAccess === true ? "primary" : "secondary"}
+                      size="sm"
+                      onClick={() => setInteriorAccess(true)}
+                    >
+                      Да
+                    </Button>
+                    <Button
+                      variant={interiorAccess === false ? "primary" : "secondary"}
+                      size="sm"
+                      onClick={() => setInteriorAccess(false)}
+                    >
+                      Нет
+                    </Button>
+                  </div>
                 </div>
+                {interiorAccess === true && (
+                  <div className="mt-4 pt-4 border-t border-[#e2e8f0] space-y-3">
+                    <p className="text-sm font-medium text-[#0f172a]">
+                      Фотографирование салона (интерьера)
+                    </p>
+                    <p className="text-xs text-[#64748b]">
+                      Сделайте 4 фотографии салона:
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        "Передняя панель во всю её длину",
+                        "Приборная панель с отображением пробега",
+                        "Передние кресла",
+                        "Задние сидения"
+                      ].map((label, idx) => (
+                        <div key={idx} className="space-y-1">
+                          <p className="text-xs text-[#64748b]">{label}</p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setInteriorPhotos((prev) =>
+                                prev.map((v, i) => (i === idx ? !v : v))
+                              )
+                            }
+                            className="flex h-20 w-full items-center justify-center rounded-xl border border-dashed border-[#e2e8f0] bg-[#f8f9fb] hover:border-[#2563eb] hover:bg-[#eff6ff]"
+                          >
+                            {interiorPhotos[idx] ? (
+                              <CheckCircle className="h-8 w-8 text-[#16a34a]" />
+                            ) : (
+                              <Camera className="h-6 w-6 text-[#94a3b8]" />
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(interiorAccess === false || (interiorAccess === true && interiorPhotos.every(Boolean))) && (
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setStep("block2")}
+                    >
+                      Перейти к блоку 2
+                    </Button>
+                  </div>
+                )}
               </section>
             )}
 
@@ -246,15 +333,44 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
                   </Button>
                 </div>
                 {hasDefects && (
-                  <div className="space-y-1">
-                    <p className="text-xs text-[#64748b]">
-                      Кратко опишите основные дефекты (зоны, характер).
-                    </p>
-                    <Input
-                      placeholder="Например: левая дверь — вмятина, капот — сколы ЛКП"
-                      value={defectsComment}
-                      onChange={(e) => setDefectsComment(e.target.value)}
-                    />
+                  <div className="space-y-2">
+                    {defects.map((defect) => (
+                      <div
+                        key={defect.id}
+                        className="flex items-center justify-between rounded-xl border border-[#e2e8f0] bg-white p-3"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-[#0f172a]">
+                            {defect.zone} — {DEFECT_TYPE_LABELS[defect.defectType]}
+                          </p>
+                          <p className="text-xs text-[#64748b]">
+                            Влияние: {IMPACT_LABELS[defect.impact]}
+                            {defect.comment && ` • ${defect.comment}`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDefects((prev) => prev.filter((d) => d.id !== defect.id));
+                          }}
+                          className="ml-2 text-[#ef4444] hover:text-[#dc2626]"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => {
+                        setEditingDefect(null);
+                        setDefectSheetOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Добавить дефект
+                    </Button>
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">
@@ -284,64 +400,80 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
                   Блок 3 — Техчек
                 </p>
                 <p className="text-xs text-[#64748b]">
-                  Проверка запуска, приборки, одометра, подкапотного пространства и
-                  течей.
+                  {interiorAccess
+                    ? "Проверка запуска, приборки, одометра, подкапотного пространства и течей."
+                    : "Внешний осмотр без доступа внутрь автомобиля."}
                 </p>
-                <div className="space-y-2">
-                  <p className="text-sm text-[#0f172a]">
-                    Актив заводится самостоятельно?
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={startsOnOwn === true ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => setStartsOnOwn(true)}
-                    >
-                      Да
-                    </Button>
-                    <Button
-                      variant={startsOnOwn === false ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => setStartsOnOwn(false)}
-                    >
-                      Нет
-                    </Button>
+                {interiorAccess === false && (
+                  <div className="rounded-xl border border-[#fbbf24] bg-[#fffbeb] p-3">
+                    <p className="text-sm text-[#92400e]">
+                      Доступ внутрь автомобиля отсутствует. Блоки запуска двигателя и подкапотного пространства пропущены.
+                    </p>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-[#0f172a]">Пробег / моточасы</p>
-                  <Input
-                    type="number"
-                    placeholder="Например: 120000"
-                    value={mileage}
-                    onChange={(e) => setMileage(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-[#0f172a]">
-                    Есть течи рабочих жидкостей?
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={hasLeaks === true ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => setHasLeaks(true)}
-                    >
-                      Да
-                    </Button>
-                    <Button
-                      variant={hasLeaks === false ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => setHasLeaks(false)}
-                    >
-                      Нет
-                    </Button>
-                  </div>
-                </div>
+                )}
+                {interiorAccess === true && (
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-sm text-[#0f172a]">
+                        Актив заводится самостоятельно?
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={startsOnOwn === true ? "primary" : "secondary"}
+                          size="sm"
+                          onClick={() => setStartsOnOwn(true)}
+                        >
+                          Да
+                        </Button>
+                        <Button
+                          variant={startsOnOwn === false ? "primary" : "secondary"}
+                          size="sm"
+                          onClick={() => setStartsOnOwn(false)}
+                        >
+                          Нет
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-[#0f172a]">Пробег / моточасы</p>
+                      <Input
+                        type="number"
+                        placeholder="Например: 120000"
+                        value={mileage}
+                        onChange={(e) => setMileage(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-[#0f172a]">
+                        Есть течи рабочих жидкостей?
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={hasLeaks === true ? "primary" : "secondary"}
+                          size="sm"
+                          onClick={() => setHasLeaks(true)}
+                        >
+                          Да
+                        </Button>
+                        <Button
+                          variant={hasLeaks === false ? "primary" : "secondary"}
+                          size="sm"
+                          onClick={() => setHasLeaks(false)}
+                        >
+                          Нет
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className="space-y-1">
                   <p className="text-sm text-[#0f172a]">Комментарий по техсостоянию</p>
                   <Input
-                    placeholder="Кратко опишите запуск, работу двигателя, приборку и подкапотное"
+                    placeholder={
+                      interiorAccess
+                        ? "Кратко опишите запуск, работу двигателя, приборку и подкапотное"
+                        : "Кратко опишите внешнее состояние актива"
+                    }
                     value={techComment}
                     onChange={(e) => setTechComment(e.target.value)}
                   />
@@ -414,10 +546,15 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
                   ? "есть"
                   : "нет"}
             </p>
-            {hasDefects && (
-              <p className="mt-1 text-xs text-[#64748b]">
-                Комментарий: {defectsComment || "—"}
-              </p>
+            {hasDefects && defects.length > 0 && (
+              <ul className="mt-1 space-y-1 text-xs text-[#64748b]">
+                {defects.map((d) => (
+                  <li key={d.id}>
+                    {d.zone} — {DEFECT_TYPE_LABELS[d.defectType]}, влияние: {IMPACT_LABELS[d.impact]}
+                    {d.comment && ` (${d.comment})`}
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
           <section>
@@ -445,7 +582,109 @@ export function InspectionWizard({ order }: InspectionWizardProps) {
           </section>
         </div>
       </Sheet>
+
+      {/* Sheet добавления дефекта */}
+      <InspectionDefectFormSheet
+        open={defectSheetOpen}
+        onOpenChange={setDefectSheetOpen}
+        onSave={(defect) => {
+          setDefects((prev) => [...prev, defect]);
+          setDefectSheetOpen(false);
+        }}
+        onCancel={() => setDefectSheetOpen(false)}
+      />
     </div>
+  );
+}
+
+function InspectionDefectFormSheet({
+  open,
+  onOpenChange,
+  onSave,
+  onCancel,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSave: (defect: InspectionDefect) => void;
+  onCancel: () => void;
+}) {
+  const [zone, setZone] = useState(DEFECT_ZONES_LCV[0]);
+  const [defectType, setDefectType] = useState<DefectType>("paint_damage");
+  const [impact, setImpact] = useState<DefectImpact>("low");
+  const [comment, setComment] = useState("");
+
+  const handleSave = () => {
+    onSave({
+      id: `d${Date.now()}`,
+      zone,
+      defectType,
+      impact,
+      comment,
+    });
+    setZone(DEFECT_ZONES_LCV[0]);
+    setDefectType("paint_damage");
+    setImpact("low");
+    setComment("");
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange} title="Добавить дефект">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-[#0f172a]">Зона</label>
+          <Select value={zone} onChange={(e) => setZone(e.target.value)}>
+            {DEFECT_ZONES_LCV.map((z) => (
+              <option key={z} value={z}>
+                {z}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[#0f172a]">Тип дефекта</label>
+          <Select
+            value={defectType}
+            onChange={(e) => setDefectType(e.target.value as DefectType)}
+          >
+            {Object.entries(DEFECT_TYPE_LABELS).map(([k, l]) => (
+              <option key={k} value={k}>
+                {l}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[#0f172a]">
+            Влияние на товарную привлекательность
+          </label>
+          <Select value={impact} onChange={(e) => setImpact(e.target.value as DefectImpact)}>
+            {Object.entries(IMPACT_LABELS).map(([k, l]) => (
+              <option key={k} value={k}>
+                {l}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[#0f172a]">
+            Комментарий (опционально)
+          </label>
+          <Input
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Дополнительное описание"
+          />
+        </div>
+        <div className="flex gap-2 pt-4">
+          <Button variant="primary" onClick={handleSave}>
+            Сохранить
+          </Button>
+          <Button variant="secondary" onClick={onCancel}>
+            Отмена
+          </Button>
+        </div>
+      </div>
+    </Sheet>
   );
 }
 

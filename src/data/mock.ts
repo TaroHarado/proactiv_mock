@@ -556,6 +556,10 @@ export interface ExecutorActiveOrder {
   serviceType: ServiceType;
   serviceLabel: string;
   status: ExecutorOrderStatus;
+  dueDate?: string; // дата дедлайна (YYYY-MM-DD)
+  acceptedAt?: string; // дата/время принятия заказа
+  overdue?: boolean; // флаг просрочки
+  overdueDays?: number; // количество дней просрочки
   statusLabel: string;
   address: string;
   accessAgreed: boolean | null;
@@ -864,6 +868,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Санкт-Петербург, Невский пр., 100",
     accessAgreed: true,
     deadline: "2025-02-10",
+    dueDate: "2026-02-11", // Завтра дедлайн
+    acceptedAt: "2026-02-09T10:30:00",
+    overdue: false,
+    overdueDays: 0,
   },
   {
     id: "ord_audit_lcv",
@@ -875,6 +883,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Москва, ул. Тверская, 1",
     accessAgreed: true,
     deadline: "2025-02-12",
+    dueDate: "2026-02-10", // Сегодня дедлайн
+    acceptedAt: "2026-02-08T14:00:00",
+    overdue: false,
+    overdueDays: 0,
   },
   {
     id: "ord_audit_special",
@@ -886,6 +898,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Екатеринбург, ул. Мира, 10",
     accessAgreed: null,
     deadline: "2025-02-14",
+    dueDate: "2026-02-13", // Есть время
+    acceptedAt: "2026-02-09T16:00:00",
+    overdue: false,
+    overdueDays: 0,
   },
   {
     id: "ord_audit_2",
@@ -897,6 +913,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Москва, ул. Ленина, 15",
     accessAgreed: true,
     deadline: "2025-02-16",
+    dueDate: "2026-02-07", // Просрочено на 3 дня
+    acceptedAt: "2026-02-05T11:00:00",
+    overdue: true,
+    overdueDays: 3,
   },
   // Инспекция
   {
@@ -909,6 +929,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Москва, Тверской б-р, 26A",
     accessAgreed: true,
     deadline: "2025-02-05",
+    dueDate: "2026-02-14", // Есть время
+    acceptedAt: "2026-02-09T09:00:00",
+    overdue: false,
+    overdueDays: 0,
   },
   {
     id: "insp2",
@@ -920,6 +944,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Казань, ул. Баумана, 8",
     accessAgreed: true,
     deadline: "2025-02-11",
+    dueDate: "2026-02-11", // Завтра дедлайн
+    acceptedAt: "2026-02-08T10:00:00",
+    overdue: false,
+    overdueDays: 0,
   },
   {
     id: "insp3",
@@ -931,6 +959,10 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     address: "Нижний Новгород, ул. Рождественская, 1",
     accessAgreed: null,
     deadline: "2025-02-18",
+    dueDate: "2026-02-13", // Есть время
+    acceptedAt: "2026-02-09T15:00:00",
+    overdue: false,
+    overdueDays: 0,
   },
   // Обслуживание и ремонт
   {
@@ -1431,6 +1463,7 @@ export interface UnderhoodIssue {
   id: string;
   type: "leak" | "noise";
   name: string;
+  impact: DefectImpact;
   fieldFixable: boolean;
   normHours?: number;
   parts?: string;

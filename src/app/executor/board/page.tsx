@@ -10,6 +10,7 @@ import { Clock, MapPin, MessageCircle, FileText, LayoutGrid, List } from "lucide
 import { cn } from "@/lib/utils";
 import { Sheet } from "@/components/ui/sheet";
 import { AssetTypeIcon } from "@/components/ui/asset-type-icon";
+import { DeadlineSelectModal } from "@/components/modals/deadline-select-modal";
 
 function formatMinutes(m: number) {
   if (m < 60) return `${m} мин`;
@@ -35,10 +36,12 @@ function BoardOrderCardRow({
   order,
   formatMinutes,
   onPreview,
+  onAccept,
 }: {
   order: (typeof boardOrdersMock)[0];
   formatMinutes: (m: number) => string;
   onPreview: (order: (typeof boardOrdersMock)[0]) => void;
+  onAccept: (order: (typeof boardOrdersMock)[0]) => void;
 }) {
   return (
     <Card
@@ -104,7 +107,12 @@ function BoardOrderCardRow({
             <FileText className="h-4 w-4" />
             Ознакомиться с заказом
           </Button>
-          <Button variant="primary" size="sm" className="flex-1 sm:flex-none">
+          <Button
+            variant="primary"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={() => onAccept(order)}
+          >
             Принять
           </Button>
           <Button variant="secondary" size="sm">Отказаться</Button>
@@ -122,6 +130,8 @@ export default function ExecutorBoardPage() {
   const sortedOrders = useMemo(() => sortBoardOrders(boardOrdersMock), []);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [previewOrder, setPreviewOrder] = useState<(typeof boardOrdersMock)[0] | null>(null);
+  const [acceptingOrder, setAcceptingOrder] = useState<(typeof boardOrdersMock)[0] | null>(null);
+  const [deadlineModalOpen, setDeadlineModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -167,6 +177,10 @@ export default function ExecutorBoardPage() {
               order={order}
               formatMinutes={formatMinutes}
               onPreview={(o) => setPreviewOrder(o)}
+              onAccept={(o) => {
+                setAcceptingOrder(o);
+                setDeadlineModalOpen(true);
+              }}
             />
           ))}
         </div>
@@ -238,7 +252,16 @@ export default function ExecutorBoardPage() {
                         <FileText className="h-4 w-4" />
                         Ознакомиться
                       </Button>
-                      <Button variant="primary" size="sm">Принять</Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          setAcceptingOrder(order);
+                          setDeadlineModalOpen(true);
+                        }}
+                      >
+                        Принять
+                      </Button>
                       <Button variant="secondary" size="sm">Отказаться</Button>
                       <Button variant="ghost" size="sm" className="gap-1">
                         <MessageCircle className="h-4 w-4" />
@@ -302,6 +325,21 @@ export default function ExecutorBoardPage() {
           </div>
         )}
       </Sheet>
+
+      <DeadlineSelectModal
+        open={deadlineModalOpen}
+        onOpenChange={setDeadlineModalOpen}
+        onConfirm={(dueDate) => {
+          console.log(`Заказ ${acceptingOrder?.id} принят с дедлайном ${dueDate}`);
+          // TODO: Здесь будет логика принятия заказа с сохранением due_date
+          setDeadlineModalOpen(false);
+          setAcceptingOrder(null);
+        }}
+        onCancel={() => {
+          setDeadlineModalOpen(false);
+          setAcceptingOrder(null);
+        }}
+      />
     </div>
   );
 }
