@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { executorActiveOrdersMock } from "@/data/mock";
+import { executorActiveOrdersMock, type EdoSignMethod } from "@/data/mock";
 import Link from "next/link";
 import { ChevronRight, MessageCircle, Info, FileSignature } from "lucide-react";
 import { getDeadlineStatus, formatDueDate } from "@/lib/deadline-utils";
+import { EdoSignModal } from "@/components/modals/edo-sign-modal";
 
 // Продажа под ключ — только у менеджера (публикация, прикрепление ссылок). У исполнителя таких заказов не показываем.
 const executorOrders = executorActiveOrdersMock.filter((o) => o.serviceType !== "sale");
@@ -22,6 +24,9 @@ const statusVariant: Record<string, "default" | "secondary" | "warning" | "outli
 };
 
 export default function ExecutorOrdersPage() {
+  const [signingOrder, setSigningOrder] = useState<typeof executorOrders[0] | null>(null);
+  const [edoModalOpen, setEdoModalOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[#0f172a]">Мои активные заказы</h1>
@@ -89,7 +94,15 @@ export default function ExecutorOrdersPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(o.status === "needs_contract_sign" || o.status === "needs_act_sign") && (
-                    <Button variant="primary" size="sm" className="gap-1">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => {
+                        setSigningOrder(o);
+                        setEdoModalOpen(true);
+                      }}
+                    >
                       <FileSignature className="h-4 w-4" />
                       Подписать
                     </Button>
@@ -110,6 +123,25 @@ export default function ExecutorOrdersPage() {
           </ul>
         </CardContent>
       </Card>
+
+      {signingOrder && (
+        <EdoSignModal
+          open={edoModalOpen}
+          onOpenChange={setEdoModalOpen}
+          documentType={signingOrder.status === "needs_contract_sign" ? "contract" : "act"}
+          availableMethods={signingOrder.edoSignMethods || ["pep", "kep"]}
+          onConfirm={(method: EdoSignMethod) => {
+            console.log(`Подписание документа методом: ${method}`);
+            // TODO: здесь будет редирект в СБИС или API-вызов
+            setEdoModalOpen(false);
+            setSigningOrder(null);
+          }}
+          onCancel={() => {
+            setEdoModalOpen(false);
+            setSigningOrder(null);
+          }}
+        />
+      )}
     </div>
   );
 }
