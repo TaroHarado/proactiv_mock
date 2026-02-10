@@ -53,16 +53,6 @@ export default function ExecutorOrdersPage() {
                         Выезд возможен после подтверждения доступа
                       </span>
                     )}
-                    {o.status === "needs_contract_sign" && (
-                      <span className="text-xs text-[#0075F3]">
-                        Подпишите договор-задание через ПЭП или КЭП (СБИС)
-                      </span>
-                    )}
-                    {o.status === "needs_act_sign" && (
-                      <span className="text-xs text-[#16a34a]">
-                        Подпишите акт выполненных работ через ПЭП или КЭП (СБИС)
-                      </span>
-                    )}
                   </div>
                   {o.dueDate && (
                     <div className="space-y-1">
