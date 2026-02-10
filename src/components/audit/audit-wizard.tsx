@@ -881,21 +881,61 @@ function Block2UI({
             </Select>
           )}
           {block2.assetType === "special" && (
-            <Select
-              className="mt-2"
-              value={block2.specialChassis ?? ""}
-              onChange={(e) =>
-                setBlock2({
-                  specialChassis: e.target.value as SpecialChassis,
-                  tires: e.target.value === "tracked" ? [] : block2.tires,
-                  trackReadings: e.target.value === "tracked" ? [{ id: "tr1", label: "Гусеницы", done: false }, { id: "tr2", label: "Катки", done: false }, { id: "tr3", label: "Ведущая звезда", done: false }] : undefined,
-                })
-              }
-            >
-              <option value="">Выберите тип ходовой</option>
-              <option value="wheeled">Колёсная</option>
-              <option value="tracked">Гусеничная</option>
-            </Select>
+            <>
+              <Select
+                className="mt-2"
+                value={block2.specialChassis ?? ""}
+                onChange={(e) => {
+                  const chassisType = e.target.value as SpecialChassis;
+                  if (chassisType === "wheeled") {
+                    const axes = block2.axesCount ?? 2;
+                    const tires = Array.from({ length: axes * 2 }, (_, i) => ({
+                      id: `w${i + 1}`,
+                      label: `Ось ${Math.floor(i / 2) + 1} ${i % 2 === 0 ? "лев" : "прав"}`,
+                    }));
+                    setBlock2({
+                      specialChassis: chassisType,
+                      axesCount: axes,
+                      tires,
+                      trackReadings: undefined,
+                    });
+                  } else if (chassisType === "tracked") {
+                    setBlock2({
+                      specialChassis: chassisType,
+                      axesCount: undefined,
+                      tires: [],
+                      trackReadings: [
+                        { id: "tr1", label: "Гусеницы", done: false },
+                        { id: "tr2", label: "Катки", done: false },
+                        { id: "tr3", label: "Ведущая звезда", done: false }
+                      ],
+                    });
+                  }
+                }}
+              >
+                <option value="">Выберите тип ходовой</option>
+                <option value="wheeled">Колёсная</option>
+                <option value="tracked">Гусеничная</option>
+              </Select>
+              {block2.specialChassis === "wheeled" && (
+                <Select
+                  className="mt-2"
+                  value={String(block2.axesCount ?? 2)}
+                  onChange={(e) => {
+                    const axes = Number(e.target.value) as 2 | 3 | 4;
+                    const tires = Array.from({ length: axes * 2 }, (_, i) => ({
+                      id: `w${i + 1}`,
+                      label: `Ось ${Math.floor(i / 2) + 1} ${i % 2 === 0 ? "лев" : "прав"}`,
+                    }));
+                    setBlock2({ axesCount: axes, tires });
+                  }}
+                >
+                  <option value="2">2 оси</option>
+                  <option value="3">3 оси</option>
+                  <option value="4">4 оси</option>
+                </Select>
+              )}
+            </>
           )}
         </div>
 
