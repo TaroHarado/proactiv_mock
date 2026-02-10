@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { executorActiveOrdersMock } from "@/data/mock";
 import Link from "next/link";
-import { ChevronRight, MessageCircle, Info } from "lucide-react";
+import { ChevronRight, MessageCircle, Info, FileSignature } from "lucide-react";
 import { getDeadlineStatus, formatDueDate } from "@/lib/deadline-utils";
 
 // Продажа под ключ — только у менеджера (публикация, прикрепление ссылок). У исполнителя таких заказов не показываем.
 const executorOrders = executorActiveOrdersMock.filter((o) => o.serviceType !== "sale");
 
 const statusVariant: Record<string, "default" | "secondary" | "warning" | "outline"> = {
+  needs_contract_sign: "warning",
   access_pending: "warning",
   in_progress: "default",
   on_review: "secondary",
+  needs_act_sign: "default",
   on_rework: "warning",
   completed: "outline",
 };
@@ -44,6 +46,16 @@ export default function ExecutorOrdersPage() {
                     {o.status === "access_pending" && (
                       <span className="text-xs text-[#64748b]">
                         Выезд возможен после подтверждения доступа
+                      </span>
+                    )}
+                    {o.status === "needs_contract_sign" && (
+                      <span className="text-xs text-[#0075F3]">
+                        Подпишите договор-задание через ПЭП или КЭП (СБИС)
+                      </span>
+                    )}
+                    {o.status === "needs_act_sign" && (
+                      <span className="text-xs text-[#16a34a]">
+                        Подпишите акт выполненных работ через ПЭП или КЭП (СБИС)
                       </span>
                     )}
                   </div>
@@ -76,8 +88,14 @@ export default function ExecutorOrdersPage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Link href={`/executor/orders/${o.id}`}>
+                  {(o.status === "needs_contract_sign" || o.status === "needs_act_sign") && (
                     <Button variant="primary" size="sm" className="gap-1">
+                      <FileSignature className="h-4 w-4" />
+                      Подписать
+                    </Button>
+                  )}
+                  <Link href={`/executor/orders/${o.id}`}>
+                    <Button variant={o.status === "needs_contract_sign" || o.status === "needs_act_sign" ? "outline" : "primary"} size="sm" className="gap-1">
                       Открыть
                       <ChevronRight className="h-4 w-4" />
                     </Button>

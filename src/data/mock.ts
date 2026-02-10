@@ -431,9 +431,11 @@ export const dashboardMetrics = {
 // ——— Моки для личного кабинета исполнителя ———
 
 export type ExecutorOrderStatus =
+  | "needs_contract_sign" // Принят, нужно подписать договор-задание
   | "access_pending"
   | "in_progress"
   | "on_review"
+  | "needs_act_sign" // Проверка пройдена, нужно подписать акт
   | "on_rework"
   | "completed";
 
@@ -564,6 +566,8 @@ export interface ExecutorActiveOrder {
   address: string;
   accessAgreed: boolean | null;
   deadline?: string;
+  edoDocId?: string; // ID документа ЭДО для подписания (договор-задание или акт)
+  edoSignMethods?: EdoSignMethod[]; // доступные методы подписи
 }
 
 export interface ExecutorCompletedOrder {
@@ -878,8 +882,8 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     assetName: "Toyota Camry",
     serviceType: "audit",
     serviceLabel: "Технико-финансовый аудит",
-    status: "on_review",
-    statusLabel: "На проверке менеджером/QA",
+    status: "needs_act_sign",
+    statusLabel: "Проверка пройдена — необходимо подписать акт",
     address: "Москва, ул. Тверская, 1",
     accessAgreed: true,
     deadline: "2025-02-12",
@@ -887,6 +891,8 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     acceptedAt: "2026-02-08T14:00:00",
     overdue: false,
     overdueDays: 0,
+    edoDocId: "edo_act_1",
+    edoSignMethods: ["pep", "kep"],
   },
   {
     id: "ord_audit_special",
@@ -924,8 +930,8 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     assetName: "Hyundai Porter",
     serviceType: "inspection",
     serviceLabel: "Проактивная инспекция",
-    status: "on_review",
-    statusLabel: "На проверке менеджером",
+    status: "needs_contract_sign",
+    statusLabel: "Принят — необходимо подписать договор-задание",
     address: "Москва, Тверской б-р, 26A",
     accessAgreed: true,
     deadline: "2025-02-05",
@@ -933,6 +939,8 @@ export const executorActiveOrdersMock: ExecutorActiveOrder[] = [
     acceptedAt: "2026-02-09T09:00:00",
     overdue: false,
     overdueDays: 0,
+    edoDocId: "edo_contract_1",
+    edoSignMethods: ["pep", "kep"],
   },
   {
     id: "insp2",
