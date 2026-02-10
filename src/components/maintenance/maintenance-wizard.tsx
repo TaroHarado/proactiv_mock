@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import type { ExecutorActiveOrder, PrepChecklistItem, PrepOrder } from "@/data/mock";
+import type { ExecutorActiveOrder, PrepChecklistItem, PrepOrder, MaintenanceMaterial } from "@/data/mock";
+import { maintenanceMaterialsMock } from "@/data/mock";
 import { Sheet } from "@/components/ui/sheet";
 import {
   ArrowLeft,
@@ -14,6 +15,7 @@ import {
   CheckCircle,
   FileText,
   MessageCircle,
+  Package,
 } from "lucide-react";
 
 interface MaintenanceWizardProps {
@@ -22,13 +24,18 @@ interface MaintenanceWizardProps {
   prepChecklist?: PrepChecklistItem[];
 }
 
-type Step = "step0" | "tasks" | "final";
+type Step = "step0" | "materials" | "tasks" | "final";
 
 interface LocalTask {
   id: string;
   label: string;
   done: boolean;
   comment: string;
+  photos: string[];
+}
+
+interface LocalMaterial extends MaintenanceMaterial {
+  photo?: string;
 }
 
 export function MaintenanceWizard({
@@ -41,6 +48,7 @@ export function MaintenanceWizard({
     prepOrder?.accessAgreed ?? null
   );
   const [noAccessComment, setNoAccessComment] = useState("");
+  
   const initialTasks = useMemo<LocalTask[]>(() => {
     if (prepChecklist.length > 0) {
       return prepChecklist.map((t) => ({
@@ -48,6 +56,7 @@ export function MaintenanceWizard({
         label: t.label,
         done: t.done,
         comment: t.comment ?? "",
+        photos: t.photos ?? [],
       }));
     }
     // fallback простой чек-лист для обычного обслуживания
@@ -57,29 +66,37 @@ export function MaintenanceWizard({
         label: "Замена масла ДВС и фильтра",
         done: false,
         comment: "",
+        photos: [],
       },
       {
         id: "m2",
         label: "Проверка тормозной системы",
         done: false,
         comment: "",
+        photos: [],
       },
       {
         id: "m3",
         label: "Осмотр ходовой части и фиксация замечаний",
         done: false,
         comment: "",
+        photos: [],
       },
     ];
   }, [prepChecklist]);
 
   const [tasks, setTasks] = useState<LocalTask[]>(initialTasks);
+  const [materials, setMaterials] = useState<LocalMaterial[]>(
+    maintenanceMaterialsMock.map(m => ({ ...m }))
+  );
+  const [generalNotes, setGeneralNotes] = useState("");
   const [resultComment, setResultComment] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [bannerVisible, setBannerVisible] = useState(false);
 
+  const allMaterialsReceived = materials.every((m) => m.received);
   const allTasksDone = tasks.length > 0 && tasks.every((t) => t.done);
-  const canSubmit = accessYes === true && allTasksDone && resultComment.trim().length > 0;
+  const canSubmit = accessYes === true && allMaterialsReceived && allTasksDone && resultComment.trim().length > 0;
 
   const isFromAudit = !!prepOrder;
 
@@ -136,7 +153,7 @@ export function MaintenanceWizard({
                 size="sm"
                 onClick={() => {
                   setAccessYes(true);
-                  setStep("tasks");
+                  setStep("materials");
                 }}
               >
                 Да
@@ -177,7 +194,92 @@ export function MaintenanceWizard({
         </CardContent>
       </Card>
 
-      {accessYes && (
+      {/* Блок получения материалов */}
+      {accessYes && step === "materials" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="h-5 w-5 text-[#0075F3]" />
+              Получение запчастей и материалов
+            </CardTitle>
+            <p className="mt-1 text-sm text-[#64748b]">
+              Отметьте полученные материалы и добавьте фото для подтверждения.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-3">
+              {materials.map((material, idx) => (
+                <li
+                  key={material.id}
+                  className="flex items-start gap-3 rounded-xl border border-[#e2e8f0] bg-[#f8f9fb] p-3"
+                >
+                  <button
+                    type="button"
+                    className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-[6px] border border-[#cbd5e1] bg-white"
+                    onClick={() =>
+                      setMaterials((prev) =>
+                        prev.map((m, i) =>
+                          i === idx ? { ...m, received: !m.received } : m
+                        )
+                      )
+                    }
+                  >
+                    {material.received && (
+                      <CheckCircle className="h-4 w-4 text-[#16a34a]" />
+                    )}
+                  </button>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div>
+                      <p
+                        className={`text-sm font-medium ${
+                          material.received
+                            ? "text-[#64748b] line-through"
+                            : "text-[#0f172a]"
+                        }`}
+                      >
+                        {material.name}
+                      </p>
+                      <p className="text-xs text-[#64748b]">
+                        Количество: {material.quantity}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-[#e2e8f0] bg-white hover:border-[#0075F3] transition-colors"
+                        onClick={() => {
+                          // TODO: загрузка фото
+                        }}
+                      >
+                        <Camera className="h-5 w-5 text-[#94a3b8]" />
+                      </button>
+                      {material.photo && (
+                        <div className="text-xs text-[#16a34a] flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Фото добавлено
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!allMaterialsReceived}
+                onClick={() => setStep("tasks")}
+              >
+                Далее — Выполнение работ
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Блок выполнения работ */}
+      {accessYes && (step === "tasks" || step === "final") && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
@@ -185,7 +287,7 @@ export function MaintenanceWizard({
             </CardTitle>
             <p className="mt-1 text-sm text-[#64748b]">
               Выполняйте задачи сверху вниз. Для каждой задачи отметьте выполнение,
-              добавьте фото и комментарий.
+              добавьте несколько фото и комментарий.
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -222,13 +324,35 @@ export function MaintenanceWizard({
                         >
                           {task.label}
                         </p>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-[#e2e8f0] bg-white">
-                            <Camera className="h-5 w-5 text-[#94a3b8]" />
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {task.photos.map((photo, photoIdx) => (
+                              <div
+                                key={photoIdx}
+                                className="relative flex h-12 w-16 items-center justify-center rounded-lg border border-[#0075F3] bg-[#eff6ff]"
+                              >
+                                <CheckCircle className="h-4 w-4 text-[#0075F3]" />
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-[#e2e8f0] bg-white hover:border-[#0075F3] transition-colors"
+                              onClick={() => {
+                                setTasks((prev) =>
+                                  prev.map((t, i) =>
+                                    i === idx
+                                      ? { ...t, photos: [...t.photos, `photo_${Date.now()}`] }
+                                      : t
+                                  )
+                                );
+                              }}
+                            >
+                              <Camera className="h-5 w-5 text-[#94a3b8]" />
+                            </button>
                           </div>
                           <Input
-                            placeholder="Комментарий"
-                            className="max-w-xs text-sm"
+                            placeholder="Комментарий к выполнению задачи"
+                            className="text-sm"
                             value={task.comment}
                             onChange={(e) =>
                               setTasks((prev) =>
@@ -245,6 +369,20 @@ export function MaintenanceWizard({
                     </li>
                   ))}
                 </ul>
+                
+                {/* Общее поле для заметок */}
+                <div className="space-y-2 pt-4 border-t border-[#e2e8f0]">
+                  <label className="text-sm font-medium text-[#0f172a]">
+                    Общие заметки по работам (опционально)
+                  </label>
+                  <textarea
+                    placeholder="Здесь вы можете указать любые дополнительные замечания, трудности, рекомендации или особенности выполнения работ..."
+                    className="w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0075F3] min-h-[100px]"
+                    value={generalNotes}
+                    onChange={(e) => setGeneralNotes(e.target.value)}
+                  />
+                </div>
+
                 <div className="flex gap-2 pt-2">
                   <Button
                     variant="primary"
@@ -335,17 +473,41 @@ export function MaintenanceWizard({
           </section>
           <section>
             <h3 className="text-sm font-semibold text-[#0f172a]">
+              Материалы и запчасти
+            </h3>
+            <ul className="mt-1 space-y-1 text-xs text-[#64748b]">
+              {materials.map((m) => (
+                <li key={m.id}>
+                  {m.received ? "✓" : "○"} {m.name} ({m.quantity})
+                  {m.photo && " — фото добавлено"}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section>
+            <h3 className="text-sm font-semibold text-[#0f172a]">
               Чек-лист работ
             </h3>
             <ul className="mt-1 space-y-1 text-xs text-[#64748b]">
               {tasks.map((t) => (
                 <li key={t.id}>
                   {t.done ? "✓" : "○"} {t.label}
+                  {t.photos.length > 0 && ` (фото: ${t.photos.length})`}
                   {t.comment && ` — ${t.comment}`}
                 </li>
               ))}
             </ul>
           </section>
+          {generalNotes && (
+            <section>
+              <h3 className="text-sm font-semibold text-[#0f172a]">
+                Общие заметки
+              </h3>
+              <p className="mt-1 text-xs text-[#64748b] whitespace-pre-wrap">
+                {generalNotes}
+              </p>
+            </section>
+          )}
           <section>
             <h3 className="text-sm font-semibold text-[#0f172a]">
               Итоговый комментарий

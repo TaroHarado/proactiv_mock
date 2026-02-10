@@ -2230,6 +2230,14 @@ export interface PrepChecklistItem {
   photos?: string[];
 }
 
+export interface MaintenanceMaterial {
+  id: string;
+  name: string;
+  quantity: string;
+  received: boolean;
+  photo?: string;
+}
+
 export const prepOrdersMock: PrepOrder[] = [
   {
     id: "prep1",
@@ -2306,6 +2314,14 @@ export const prepChecklistMock: PrepChecklistItem[] = [
   { id: "pc6", prepOrderId: "prep3", label: "Замена фильтров (по аудиту)", done: false },
   { id: "pc7", prepOrderId: "prep3", label: "Диагностика АКПП", done: false },
   { id: "pc8", prepOrderId: "prep4", label: "Полировка и химчистка", done: false },
+];
+
+export const maintenanceMaterialsMock: MaintenanceMaterial[] = [
+  { id: "mat1", name: "Масло моторное 5W-30", quantity: "4 л", received: false },
+  { id: "mat2", name: "Фильтр масляный", quantity: "1 шт", received: false },
+  { id: "mat3", name: "Фильтр воздушный", quantity: "1 шт", received: false },
+  { id: "mat4", name: "Тормозные колодки передние", quantity: "1 комплект", received: false },
+  { id: "mat5", name: "Краска (RAL 9010)", quantity: "2 л", received: false },
 ];
 
 export function getPrepOrderById(id: string): PrepOrder | undefined {
